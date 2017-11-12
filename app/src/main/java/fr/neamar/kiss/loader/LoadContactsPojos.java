@@ -103,6 +103,41 @@ public class LoadContactsPojos extends LoadPojos<ContactsPojo> {
             cur.close();
         }
 
+        // Get im links for contacts
+        Cursor imCursor = context.get().getContentResolver().query(
+                ContactsContract.Data.CONTENT_URI,
+                new String[] {
+                        ContactsContract.Contacts.LOOKUP_KEY,
+                        ContactsContract.Data.MIMETYPE,
+                        ContactsContract.Data._ID
+                },
+                String.format("%s = ?", ContactsContract.RawContacts.ACCOUNT_TYPE),
+                new String[]{  ContactsPojo.WA_ACCOUNT_TYPE, },
+                null);
+
+        if (imCursor != null) {
+            if (imCursor.getCount() > 0) {
+                int lookupKeyIndex = imCursor.getColumnIndex(ContactsContract.Data.LOOKUP_KEY);
+                int mimeTypeIndex = imCursor.getColumnIndex(ContactsContract.Data.MIMETYPE);
+                int phoneContactIdIndex = imCursor.getColumnIndex(ContactsContract.Data._ID);
+                while (imCursor.moveToNext()) {
+                    String lookupKey = imCursor.getString(lookupKeyIndex);
+                    String mimeType = imCursor.getString(mimeTypeIndex);
+                    long phoneContactId = imCursor.getLong(phoneContactIdIndex);
+
+                    if (phoneContactId != 0 && lookupKey != null
+                            && mapContacts.containsKey(lookupKey)
+                            && ContactsPojo.WA_PROFILE_TYPE.equals(mimeType)) {
+                        for (ContactsPojo contact : mapContacts.get(lookupKey)) {
+                            contact.phoneContactId = phoneContactId;
+                            contact.imMimeTypes.add(mimeType);
+                        }
+                    }
+                }
+            }
+            imCursor.close();
+        }
+
         // Retrieve contacts' nicknames
         Cursor nickCursor = context.get().getContentResolver().query(
                 ContactsContract.Data.CONTENT_URI,
@@ -133,7 +168,7 @@ public class LoadContactsPojos extends LoadPojos<ContactsPojo> {
 
         for (Set<ContactsPojo> phones : mapContacts.values()) {
             // Find primary phone and add this one.
-            Boolean hasPrimary = false;
+            boolean hasPrimary = false;
             for (ContactsPojo contact : phones) {
                 if (contact.primary) {
                     contacts.add(contact);

@@ -1,5 +1,6 @@
 package fr.neamar.kiss.result;
 
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -101,6 +102,9 @@ public class ContactsResult extends CallResult {
         // Message action
         ImageButton messageButton = view.findViewById(R.id.item_contact_action_message);
         messageButton.setColorFilter(primaryColor);
+        // IM action
+        ImageButton imButton = view.findViewById(R.id.item_contact_action_im);
+        imButton.setColorFilter(primaryColor);
 
         PackageManager pm = context.getPackageManager();
 
@@ -132,6 +136,19 @@ public class ContactsResult extends CallResult {
         } else {
             phoneButton.setVisibility(View.INVISIBLE);
             messageButton.setVisibility(View.INVISIBLE);
+        }
+
+        if (contactPojo.imMimeTypes.contains(ContactsPojo.WA_PROFILE_TYPE)) {
+            imButton.setVisibility(View.VISIBLE);
+            imButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    launchIM(v.getContext(), ContactsPojo.WA_PROFILE_TYPE);
+                    recordLaunch(context, queryInterface);
+                }
+            });
+        } else {
+            imButton.setVisibility(View.INVISIBLE);
         }
 
         return view;
@@ -252,6 +269,17 @@ public class ContactsResult extends CallResult {
         String url = "sms:" + Uri.encode(contactPojo.phone);
         Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse(url));
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(i);
+    }
+
+    private void launchIM(final Context context, String mimeType) {
+        final Uri uri = ContentUris.withAppendedId(
+                ContactsContract.Data.CONTENT_URI,
+                contactPojo.phoneContactId);
+
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setDataAndType(uri, mimeType);
+        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(i);
     }
 }
