@@ -2,9 +2,15 @@ package fr.neamar.kiss.pojo;
 
 import android.net.Uri;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import fr.neamar.kiss.normalizer.StringNormalizer;
 
 public final class ContactsPojo extends Pojo {
+    public static final String WA_PROFILE_TYPE = "vnd.android.cursor.item/vnd.com.whatsapp.profile";
+    public static final String WA_ACCOUNT_TYPE = "com.whatsapp";
+
     public final String lookupKey;
 
     public final String phone;
@@ -41,6 +47,10 @@ public final class ContactsPojo extends Pojo {
     public String getNickname() {
         return nickname;
     }
+
+    public long phoneContactId;
+
+    public Set<String> imMimeTypes = new HashSet<>();
 
     public void setNickname(String nickname) {
         if (nickname != null) {
