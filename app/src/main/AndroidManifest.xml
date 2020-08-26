@@ -67,7 +67,7 @@
             android:launchMode="singleTask"
             android:screenOrientation="user"
             android:stateNotNeeded="true"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
+            android:windowSoftInputMode="stateAlwaysHidden|adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

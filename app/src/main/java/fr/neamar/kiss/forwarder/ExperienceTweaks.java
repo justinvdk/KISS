@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
-import android.os.Handler;
 import android.provider.Settings;
 import android.text.InputType;
 import android.view.GestureDetector;
@@ -48,8 +47,6 @@ class ExperienceTweaks extends Forwarder {
      */
     private final static int INPUT_TYPE_WORKAROUND = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             | InputType.TYPE_TEXT_FLAG_AUTO_CORRECT;
-
-    private final Runnable displayKeyboardRunnable = mainActivity::showKeyboard;
 
     private View mainEmptyView;
     private final GestureDetector gd;
@@ -155,7 +152,7 @@ class ExperienceTweaks extends Forwarder {
                         displayNotificationDrawer();
                         break;
                     case "display-keyboard":
-                        mainActivity.showKeyboard();
+                        // TODO: remove
                         break;
                     case "display-apps":
                         if (mainActivity.isViewingSearchResults()) {
@@ -177,13 +174,16 @@ class ExperienceTweaks extends Forwarder {
                         }
 
                         if (isMinimalisticModeEnabledForFavorites()) {
-                            mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+//                            mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+                            mainActivity.keyboardHelper.showBottom(false);
                         }
                         break;
                     case "display-favorites":
                         // Not provided as an option for the gestures, but useful if you only want to display facorites on tap,
                         // not history.
-                        mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+//                        mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+                        // TODO: Might not be the best place
+                        mainActivity.keyboardHelper.showBottom(false);
                 }
             }
         });
@@ -195,25 +195,6 @@ class ExperienceTweaks extends Forwarder {
 
     void onResume() {
         adjustInputType();
-
-        // Activity manifest specifies stateAlwaysHidden as windowSoftInputMode
-        // so the keyboard will be hidden by default
-        // we may want to display it if the setting is set
-        if (isKeyboardOnStartEnabled()) {
-            // Display keyboard
-            mainActivity.showKeyboard();
-
-            new Handler().postDelayed(displayKeyboardRunnable, 10);
-            // For some weird reasons, keyboard may be hidden by the system
-            // So we have to run this multiple time at different time
-            // See https://github.com/Neamar/KISS/issues/119
-            new Handler().postDelayed(displayKeyboardRunnable, 100);
-            new Handler().postDelayed(displayKeyboardRunnable, 500);
-        } else {
-            // Not used (thanks windowSoftInputMode)
-            // unless coming back from KISS settings
-            mainActivity.hideKeyboard();
-        }
 
         if (isMinimalisticModeEnabled()) {
             mainEmptyView.setVisibility(View.GONE);
@@ -232,20 +213,9 @@ class ExperienceTweaks extends Forwarder {
         gd.onTouchEvent(event);
     }
 
-    void onWindowFocusChanged(boolean hasFocus) {
-        if (hasFocus && isKeyboardOnStartEnabled()) {
-            mainActivity.showKeyboard();
-        }
-    }
-
     void onDisplayKissBar(boolean display) {
         if (isMinimalisticModeEnabledForFavorites() && !display) {
 //            mainActivity.favoritesBar.setVisibility(View.GONE);
-        }
-
-        if (!display && isKeyboardOnStartEnabled()) {
-            // Display keyboard
-            mainActivity.showKeyboard();
         }
     }
 
@@ -331,13 +301,6 @@ class ExperienceTweaks extends Forwarder {
     private boolean isNonCompliantKeyboard() {
         String currentKeyboard = Settings.Secure.getString(mainActivity.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD).toLowerCase();
         return currentKeyboard.contains("swiftkey") || currentKeyboard.contains("flesky");
-    }
-
-    /**
-     * Should the keyboard be displayed by default?
-     */
-    private boolean isKeyboardOnStartEnabled() {
-        return prefs.getBoolean("display-keyboard", false);
     }
 
     /**
