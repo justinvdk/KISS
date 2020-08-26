@@ -311,7 +311,7 @@ class ExperienceTweaks extends Forwarder {
 
     void onDisplayKissBar(boolean display) {
         if (isMinimalisticModeEnabledForFavorites() && !display) {
-            mainActivity.favoritesBar.setVisibility(View.GONE);
+//            mainActivity.favoritesBar.setVisibility(View.GONE);
         }
     }
 
@@ -323,7 +323,7 @@ class ExperienceTweaks extends Forwarder {
                 mainEmptyView.setVisibility(View.GONE);
 
                 if (isMinimalisticModeEnabledForFavorites()) {
-                    mainActivity.favoritesBar.setVisibility(View.GONE);
+//                    mainActivity.favoritesBar.setVisibility(View.GONE);
                 }
                 mainActivity.findViewById(R.id.widgetLayout).setVisibility(View.VISIBLE);
             } else {

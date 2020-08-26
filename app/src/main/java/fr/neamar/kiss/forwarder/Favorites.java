@@ -90,7 +90,7 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
         } else {
             mainActivity.favoritesBar = mainActivity.findViewById(R.id.embeddedFavoritesBar);
             // Hide the external bar
-            mainActivity.findViewById(R.id.externalFavoriteBar).setVisibility(View.GONE);
+//            mainActivity.findViewById(R.id.externalFavoriteBar).setVisibility(View.GONE);
         }
 
         if (prefs.getBoolean("first-run-favorites", true)) {
@@ -196,14 +196,14 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
         if (query.isEmpty()) {
             mainActivity.favoritesBar.setVisibility(View.VISIBLE);
         } else {
-            mainActivity.favoritesBar.setVisibility(View.GONE);
+//            mainActivity.favoritesBar.setVisibility(View.GONE);
         }
     }
 
     void onDataSetChanged() {
         // Do not display the external bar when viewing all apps
         if (mainActivity.isViewingAllApps() && isExternalFavoriteBarEnabled()) {
-            mainActivity.favoritesBar.setVisibility(View.GONE);
+//            mainActivity.favoritesBar.setVisibility(View.GONE);
         }
     }
 
