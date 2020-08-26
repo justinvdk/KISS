@@ -206,6 +206,11 @@
             <fr.neamar.kiss.preference.SwitchPreference
                 android:defaultValue="false"
                 android:dependency="history-hide"
+                android:key="history-home-toggle"
+                android:title="@string/history_onclick_home_name" />
+            <fr.neamar.kiss.preference.SwitchPreference
+                android:defaultValue="false"
+                android:dependency="history-hide"
                 android:key="favorites-hide"
                 android:title="@string/favorites_hide" />
             <fr.neamar.kiss.preference.SwitchPreference

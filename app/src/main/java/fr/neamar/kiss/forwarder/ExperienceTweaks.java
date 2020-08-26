@@ -53,6 +53,8 @@ class ExperienceTweaks extends Forwarder {
 
     private View mainEmptyView;
     private final GestureDetector gd;
+    
+    private boolean historyHideToggle = false;
 
     @SuppressLint("SourceLockedOrientationActivity")
     ExperienceTweaks(final MainActivity mainActivity) {
@@ -249,7 +251,7 @@ class ExperienceTweaks extends Forwarder {
 
     void updateSearchRecords(boolean isRefresh, String query) {
         if (query.isEmpty()) {
-            if (isMinimalisticModeEnabled()) {
+            if (isMinimalisticModeEnabled() && !historyHideToggle) {
                 mainActivity.runTask(new NullSearcher(mainActivity));
                 // By default, help text is displayed -- not in minimalistic mode.
                 mainEmptyView.setVisibility(View.GONE);
@@ -362,5 +364,19 @@ class ExperienceTweaks extends Forwarder {
         }
 
         return false;
+    }
+
+    public void onNewIntent(Intent intent) {
+        if (prefs.getBoolean("history-home-toggle", false)){
+            // There doesn't seem to be a way to distinguish from getting back from somewhere
+            // else or just pressing the home button. I used to check the last onPause and whether it
+            // had occured JUST before this call, but that doesn't seem to work (anymore?).
+            // For now just trigger on every ACTION_MAIN intent. The "bug" here is that when coming
+            // from any app outside the launcher also toggles widget and history.
+            if (Intent.ACTION_MAIN.equals(intent.getAction())) {
+                historyHideToggle = !historyHideToggle;
+            }
+        }
+
     }
 }
