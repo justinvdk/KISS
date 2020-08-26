@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
-import android.os.Handler;
 import android.provider.Settings;
 import android.text.InputType;
 import android.util.DisplayMetrics;
@@ -52,8 +51,6 @@ class ExperienceTweaks extends Forwarder {
      */
     private final static int INPUT_TYPE_WORKAROUND = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             | InputType.TYPE_TEXT_FLAG_AUTO_CORRECT;
-
-    private final Runnable displayKeyboardRunnable = mainActivity::showKeyboard;
 
     private View mainEmptyView;
     private final GestureDetector gd;
@@ -174,7 +171,7 @@ class ExperienceTweaks extends Forwarder {
                         displayQuickSettings();
                         break;
                     case "display-keyboard":
-                        mainActivity.showKeyboard();
+                        // TODO: remove
                         break;
                     case "hide-keyboard":
                         mainActivity.hideKeyboard();
@@ -197,13 +194,16 @@ class ExperienceTweaks extends Forwarder {
                         }
 
                         if (isMinimalisticModeEnabledForFavorites()) {
-                            mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+//                            mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+                            mainActivity.keyboardHelper.showBottom(false);
                         }
                         break;
                     case "display-favorites":
                         // Not provided as an option for the gestures, but useful if you only want to display favorites on tap,
                         // not history.
-                        mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+//                        mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+                        // TODO: Might not be the best place
+                        mainActivity.keyboardHelper.showBottom(false);
                         break;
                     case "display-menu":
                         mainActivity.openContextMenu(mainActivity.menuButton);
@@ -236,25 +236,6 @@ class ExperienceTweaks extends Forwarder {
     void onResume() {
         adjustInputType();
 
-        // Activity manifest specifies stateAlwaysHidden as windowSoftInputMode
-        // so the keyboard will be hidden by default
-        // we may want to display it if the setting is set
-        if (shouldShowKeyboard()) {
-            // Display keyboard
-            mainActivity.showKeyboard();
-
-            new Handler().postDelayed(displayKeyboardRunnable, 10);
-            // For some weird reasons, keyboard may be hidden by the system
-            // So we have to run this multiple time at different time
-            // See https://github.com/Neamar/KISS/issues/119
-            new Handler().postDelayed(displayKeyboardRunnable, 100);
-            new Handler().postDelayed(displayKeyboardRunnable, 500);
-        } else {
-            // Not used (thanks windowSoftInputMode)
-            // unless coming back from KISS settings
-            mainActivity.hideKeyboard();
-        }
-
         if (isMinimalisticModeEnabled()) {
             mainEmptyView.setVisibility(View.GONE);
 
@@ -270,43 +251,6 @@ class ExperienceTweaks extends Forwarder {
     void onTouch(MotionEvent event) {
         // Forward touch events to the gesture detector
         gd.onTouchEvent(event);
-    }
-
-    private float dpToPx(Context context, float valueInDp) {
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, valueInDp, metrics);
-    }
-
-    void onGlobalLayout() {
-        // There's no easy way to check if a soft keyboard is visible in android, but it can be safely assumed that
-        // if the root layout is significantly smaller than the screen, it's been resized for a keyboard. See here:
-        // https://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
-        if (prefs.getBoolean("history-hide", false) && prefs.getBoolean("history-onkeyboard", false) &&
-                mainActivity.isViewingSearchResults() && mainActivity.searchEditText.getText().toString().isEmpty()) {
-            final View activityRootView = mainActivity.findViewById(android.R.id.content);
-            int heightDiff = activityRootView.getRootView().getHeight() - activityRootView.getHeight();
-            if (heightDiff > dpToPx(mainActivity.getBaseContext(), 200)) {
-                // If it's more than 200dp, it's most likely a keyboard.
-                if (mainActivity.adapter == null || mainActivity.adapter.isEmpty()) {
-                    mainActivity.showHistory();
-                    mainActivity.displayClearOnInput();
-                }
-            } else {
-                // we never want this triggered because the keyboard scroller did it
-                if (mainActivity.adapter != null && !mainActivity.adapter.isEmpty() && !mainActivity.hider.isScrolled()) {
-
-                    // Only apply changes when height changes, this avoids breakage when history-ontouch is enabled or scrolled
-                    if (activityRootView.getHeight() != lastHeight) {
-                        // reset edittext (hide history)
-                        mainActivity.searchEditText.setText("");
-                    }
-                }
-            }
-            lastHeight = activityRootView.getHeight();
-        }
-    }
-
-    void onWindowFocusChanged(boolean hasFocus) {
     }
 
     void onDisplayKissBar(boolean display) {

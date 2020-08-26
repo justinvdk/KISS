@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
+import android.inputmethodservice.KeyboardView;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -57,7 +58,7 @@ import fr.neamar.kiss.searcher.TagsSearcher;
 import fr.neamar.kiss.searcher.UntaggedSearcher;
 import fr.neamar.kiss.ui.AnimatedListView;
 import fr.neamar.kiss.ui.BottomPullEffectView;
-import fr.neamar.kiss.ui.KeyboardScrollHider;
+import fr.neamar.kiss.utils.KISSKeyboardHelper;
 import fr.neamar.kiss.ui.ListPopup;
 import fr.neamar.kiss.ui.SearchEditText;
 import fr.neamar.kiss.utils.PackageManagerUtils;
@@ -66,7 +67,7 @@ import fr.neamar.kiss.utils.SystemUiVisibilityHelper;
 
 import static android.view.HapticFeedbackConstants.LONG_PRESS;
 
-public class MainActivity extends Activity implements QueryInterface, KeyboardScrollHider.KeyboardHandler, View.OnTouchListener {
+public class MainActivity extends Activity implements QueryInterface, View.OnTouchListener {
 
     public static final String START_LOAD = "fr.neamar.summon.START_LOAD";
     public static final String LOAD_OVER = "fr.neamar.summon.LOAD_OVER";
@@ -103,10 +104,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
      * View to display when list is empty
      */
     public View emptyListView;
-    /**
-     * Utility for automatically hiding the keyboard when scrolling down
-     */
-    public KeyboardScrollHider hider;
 
     /**
      * The ViewGroup that wraps the buttons at the right hand side of the searchEditText
@@ -168,6 +165,8 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
 
     private ForwarderManager forwarderManager;
     private Permission permissionManager;
+
+    public KISSKeyboardHelper keyboardHelper;
 
     /**
      * Called when the activity is first created.
@@ -244,6 +243,9 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
          */
         displayLoader(true);
 
+        keyboardHelper = new KISSKeyboardHelper(this);
+        keyboardHelper.showQwerty();
+
         // Add touch listener for history popup to root view
         findViewById(android.R.id.content).setOnTouchListener(this);
 
@@ -293,6 +295,9 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
             }
         });
 
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromInputMethod(searchEditText.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+
         // Listen to changes
         searchEditText.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
@@ -337,7 +342,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
                         return true;
                     }
                     systemUiVisibilityHelper.onKeyboardVisibilityChanged(false);
-                    hider.fixScroll();
                     return false;
                 }
 
@@ -355,14 +359,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
         });
 
         registerForContextMenu(menuButton);
-
-        // When scrolling down on the list,
-        // Hide the keyboard.
-        this.hider = new KeyboardScrollHider(this,
-                this.list,
-                (BottomPullEffectView) this.findViewById(R.id.listEdgeEffect)
-        );
-        this.hider.start();
 
         // Enable/disable phone broadcast receiver
         PackageManagerUtils.enableComponent(this, IncomingCallHandler.class, prefs.getBoolean("enable-phone-history", false));
@@ -533,7 +529,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
                 startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS));
                 return true;
             case R.id.wallpaper:
-                hideKeyboard();
                 Intent intent = new Intent(Intent.ACTION_SET_WALLPAPER);
                 startActivity(Intent.createChooser(intent, getString(R.string.menu_wallpaper)));
                 return true;
@@ -586,10 +581,9 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
         if (forwarderManager.onTouch(view, event)) {
             return true;
         }
-
-        if (view.getId() == searchEditText.getId() && event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            searchEditText.performClick();
-        }
+//        if (view.getId() == searchEditText.getId() && event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+//            searchEditText.performClick();
+//        }
         return true;
     }
 
@@ -841,7 +835,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
         if (!searchEditText.getText().toString().isEmpty()) {
             searchEditText.setText("");
             displayClearOnInput();
-            hideKeyboard();
         } else if (isViewingAllApps()) {
             displayKissBar(false);
         }
@@ -859,7 +852,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
                 MainActivity.this.mPopup = null;
             }
         });
-        hider.fixScroll();
     }
 
     @Override
@@ -881,38 +873,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         systemUiVisibilityHelper.onWindowFocusChanged(hasFocus);
-        forwarderManager.onWindowFocusChanged(hasFocus);
-    }
-
-
-    public void showKeyboard() {
-        searchEditText.requestFocus();
-        InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        assert mgr != null;
-        mgr.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT);
-
-        systemUiVisibilityHelper.onKeyboardVisibilityChanged(true);
-    }
-
-    @Override
-    public void hideKeyboard() {
-        // Check if no view has focus:
-        View view = this.getCurrentFocus();
-        if (view != null) {
-            InputMethodManager inputManager = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
-            //noinspection ConstantConditions
-            inputManager.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-        }
-
-        systemUiVisibilityHelper.onKeyboardVisibilityChanged(false);
-        dismissPopup();
-
-        searchEditText.clearFocus();
-    }
-
-    @Override
-    public void applyScrollSystemUi() {
-        systemUiVisibilityHelper.applyScrollSystemUi();
     }
 
     /**
