@@ -325,10 +325,12 @@ class ExperienceTweaks extends Forwarder {
                 if (isMinimalisticModeEnabledForFavorites()) {
                     mainActivity.favoritesBar.setVisibility(View.GONE);
                 }
+                mainActivity.findViewById(R.id.widgetLayout).setVisibility(View.VISIBLE);
             } else {
                 Searcher searcher = new HistorySearcher(mainActivity);
                 searcher.setRefresh(isRefresh);
                 mainActivity.runTask(searcher);
+                mainActivity.findViewById(R.id.widgetLayout).setVisibility(View.INVISIBLE);
             }
         }
     }
