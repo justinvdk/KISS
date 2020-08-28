@@ -61,7 +61,7 @@ public class SearchProvider extends SimpleProvider {
         assert defaultSearchEngine != null;
         for (String searchProvider : selectedProviders) {
             String url = getProviderUrl(availableProviders, searchProvider);
-            SearchPojo pojo = new SearchPojo("", url, SearchPojo.SEARCH_QUERY);
+            SearchPojo pojo = new SearchPojo("", url, SearchPojo.Type.SEARCH);
             // Super low relevance, should never be displayed before anything
             pojo.relevance = -500;
             if (defaultSearchEngine.equals(searchProvider))
@@ -97,7 +97,7 @@ public class SearchProvider extends SimpleProvider {
         } else if (isValidUri(query)) {
             // Open uri directly by an app that can handle it (if i type gemini://oppen.digital/ariane/ for gemini browser)
             // https://github.com/Neamar/KISS/issues/1786
-            SearchPojo pojo = new SearchPojo("search://uri-access", query, "", SearchPojo.URI_QUERY);
+            SearchPojo pojo = new SearchPojo("search://uri-access", query, "", SearchPojo.Type.URI);
             pojo.relevance = -100;
             pojo.setName(query, false);
             records.add(pojo);

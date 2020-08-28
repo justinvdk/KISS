@@ -1,24 +1,23 @@
 package fr.neamar.kiss.pojo;
 
 public final class SearchPojo extends Pojo {
-    public static final int SEARCH_QUERY = 0;
-    public static final int URL_QUERY = 1;
-    public static final int CALCULATOR_QUERY = 2;
-    public static final int URI_QUERY = 3;
+    public enum Type {
+        SEARCH,
+        URL,
+        CALCULATOR,
+        URI
+    }
 
     public String query;
     public final String url;
-    public final int type;
+    public final Type type;
 
-    public SearchPojo(String query, String url, int type) {
+    public SearchPojo(String query, String url, Type type) {
         this(url, query, url, type);
     }
 
-    public SearchPojo(String id, String query, String url, int type) {
+    public SearchPojo(String id, String query, String url, Type type) {
         super(id);
-        if (type != SEARCH_QUERY && type != URL_QUERY && type != CALCULATOR_QUERY && type != URI_QUERY) {
-            throw new IllegalArgumentException("Wrong type!");
-        }
 
         this.query = query;
         this.url = url;
