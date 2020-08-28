@@ -32,6 +32,8 @@ import fr.neamar.kiss.dataprovider.AppProvider;
 import fr.neamar.kiss.dataprovider.ContactsProvider;
 import fr.neamar.kiss.dataprovider.IProvider;
 import fr.neamar.kiss.dataprovider.Provider;
+import fr.neamar.kiss.dataprovider.simpleprovider.IpProvider;
+import fr.neamar.kiss.dataprovider.simpleprovider.SearchProvider;
 import fr.neamar.kiss.dataprovider.ShortcutsProvider;
 import fr.neamar.kiss.dataprovider.simpleprovider.CalculatorProvider;
 import fr.neamar.kiss.dataprovider.simpleprovider.PhoneProvider;
@@ -119,6 +121,9 @@ public class DataHandler extends BroadcastReceiver
         ProviderEntry tagsEntry = new ProviderEntry();
         tagsEntry.provider = new TagsProvider();
         this.providers.put("tags", tagsEntry);
+        ProviderEntry jkEntry = new ProviderEntry();
+        jkEntry.provider = new IpProvider();
+        this.providers.put("jk", jkEntry);
     }
 
     @Override

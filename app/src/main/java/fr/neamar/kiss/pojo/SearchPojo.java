@@ -5,7 +5,8 @@ public final class SearchPojo extends Pojo {
         SEARCH,
         URL,
         CALCULATOR,
-        URI
+        URI,
+        IP
     }
 
     public String query;

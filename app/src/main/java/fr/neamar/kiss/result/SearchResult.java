@@ -89,7 +89,7 @@ public class SearchResult extends Result {
             pos = text.indexOf("=");
             len = text.length() - pos;
             image.setImageResource(R.drawable.ic_functions);
-        } else if (searchPojo.type == SearchPojo.URI_QUERY) {
+        } else if (searchPojo.type == SearchPojo.Type.URI) {
             text = String.format(context.getString(R.string.ui_item_open), this.searchPojo.query);
             pos = text.indexOf(searchPojo.query);
             len = searchPojo.query.length();
@@ -103,6 +103,11 @@ public class SearchResult extends Result {
                     hasCustomIcon = true;
                 }
             }
+        } else if (searchPojo.type == SearchPojo.Type.IP) {
+            text = searchPojo.query;
+            pos = text.indexOf(": ") + 2;
+            len = text.length() - pos;
+            image.setImageResource(R.drawable.ic_netif);
         } else {
             throw new IllegalArgumentException("Wrong type!");
         }
@@ -196,13 +201,17 @@ public class SearchResult extends Result {
                 ClipboardUtils.setClipboard(context, searchPojo.query.substring(searchPojo.query.indexOf("=") + 2));
                 Toast.makeText(context, R.string.copy_confirmation, Toast.LENGTH_SHORT).show();
                 break;
-            case SearchPojo.URI_QUERY:
+            case URI:
                 Intent intent = createUriIntent();
                 try {
                     context.startActivity(intent);
                 } catch (android.content.ActivityNotFoundException e) {
                     Log.w("SearchResult", "Unable to run search for uri: " + searchPojo.url);
                 }
+                break;
+            case IP:
+                ClipboardUtils.setClipboard(context, searchPojo.query.substring(searchPojo.query.indexOf(": ") + 2));
+                Toast.makeText(context, R.string.copy_confirmation, Toast.LENGTH_SHORT).show();
                 break;
         }
     }
