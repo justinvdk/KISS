@@ -451,6 +451,8 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
             displayKissBar(false);
         }
 
+        forwarderManager.onNewIntent(intent);
+
         // Close the backButton context menu
         closeContextMenu();
     }
