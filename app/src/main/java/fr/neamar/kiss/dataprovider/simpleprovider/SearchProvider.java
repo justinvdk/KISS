@@ -55,7 +55,7 @@ public class SearchProvider extends SimpleProvider {
         assert defaultSearchEngine != null;
         for (String searchProvider : selectedProviders) {
             String url = getProviderUrl(availableProviders, searchProvider);
-            SearchPojo pojo = new SearchPojo("", url, SearchPojo.SEARCH_QUERY);
+            SearchPojo pojo = new SearchPojo("", url, SearchPojo.Type.SEARCH);
             // Super low relevance, should never be displayed before anything
             pojo.relevance = -500;
             if (defaultSearchEngine.equals(searchProvider))
@@ -95,7 +95,7 @@ public class SearchProvider extends SimpleProvider {
             // (tradeoff: non https URL will break, but they shouldn't exist anymore)
             guessedUrl = guessedUrl.replace("http://", "https://");
             if (URLUtil.isValidUrl(guessedUrl)) {
-                SearchPojo pojo = new SearchPojo("search://url-access","", guessedUrl, SearchPojo.URL_QUERY);
+                SearchPojo pojo = new SearchPojo("search://url-access","", guessedUrl, SearchPojo.Type.URL);
                 pojo.relevance = 50;
                 pojo.setName(guessedUrl, false);
                 records.add(pojo);
