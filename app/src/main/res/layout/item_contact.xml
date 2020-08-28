@@ -29,8 +29,8 @@
         android:id="@+id/item_contact_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toStartOf="@+id/item_contact_action_message"
-        android:layout_toLeftOf="@+id/item_contact_action_message"
+        android:layout_toStartOf="@+id/item_contact_action_im"
+        android:layout_toLeftOf="@+id/item_contact_action_im"
         android:layout_toEndOf="@+id/item_contact_icon"
         android:layout_toRightOf="@+id/item_contact_icon"
         android:ellipsize="end"
@@ -86,6 +86,16 @@
         android:textSize="?attr/resultTitleSize"
         tools:ignore="RtlSymmetry"
         tools:text="@string/stub_contact_nickname" />
+
+    <ImageButton
+        android:id="@+id/item_contact_action_im"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@+id/item_contact_action_message"
+        android:background="?attr/appSelectableItemBackground"
+        android:contentDescription="@string/ui_item_contact_hint_message"
+        android:src="@drawable/ic_whatsapp" />
 
     <ImageButton
         android:id="@+id/item_contact_action_message"
