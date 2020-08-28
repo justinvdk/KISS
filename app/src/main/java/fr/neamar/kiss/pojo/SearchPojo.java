@@ -4,7 +4,8 @@ public final class SearchPojo extends Pojo {
     public enum Type {
         SEARCH,
         URL,
-        CALCULATOR
+        CALCULATOR,
+        IP
     }
 
     public String query;

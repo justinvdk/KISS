@@ -89,6 +89,11 @@ public class SearchResult extends Result {
             pos = text.indexOf("=");
             len = text.length() - pos;
             image.setImageResource(R.drawable.ic_functions);
+        } else if (searchPojo.type == SearchPojo.Type.IP) {
+            text = searchPojo.query;
+            pos = text.indexOf(": ") + 2;
+            len = text.length() - pos;
+            image.setImageResource(R.drawable.ic_netif);
         } else {
             throw new IllegalArgumentException();
         }
@@ -135,6 +140,10 @@ public class SearchResult extends Result {
                 break;
             case CALCULATOR:
                 ClipboardUtils.setClipboard(context, searchPojo.query.substring(searchPojo.query.indexOf("=") + 2));
+                Toast.makeText(context, R.string.copy_confirmation, Toast.LENGTH_SHORT).show();
+                break;
+            case IP:
+                ClipboardUtils.setClipboard(context, searchPojo.query.substring(searchPojo.query.indexOf(": ") + 2));
                 Toast.makeText(context, R.string.copy_confirmation, Toast.LENGTH_SHORT).show();
                 break;
         }
