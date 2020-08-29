@@ -53,12 +53,12 @@ public class SearchResult extends Result {
         int pos;
         int len;
 
-        if (searchPojo.type == SearchPojo.URL_QUERY) {
+        if (searchPojo.type == SearchPojo.Type.URL) {
             text = String.format(context.getString(R.string.ui_item_visit), this.pojo.getName());
             pos = text.indexOf(this.pojo.getName());
             len = this.pojo.getName().length();
             image.setImageResource(R.drawable.ic_public);
-        } else if (searchPojo.type == SearchPojo.SEARCH_QUERY) {
+        } else if (searchPojo.type == SearchPojo.Type.SEARCH) {
             text = String.format(context.getString(R.string.ui_item_search), this.pojo.getName(), searchPojo.query);
             pos = text.indexOf(searchPojo.query);
             len = searchPojo.query.length();
@@ -84,11 +84,16 @@ public class SearchResult extends Result {
                 }
 
             }
-        } else if (searchPojo.type == SearchPojo.CALCULATOR_QUERY) {
+        } else if (searchPojo.type == SearchPojo.Type.CALCULATOR) {
             text = searchPojo.query;
             pos = text.indexOf("=");
             len = text.length() - pos;
             image.setImageResource(R.drawable.ic_functions);
+        } else if (searchPojo.type == SearchPojo.Type.IP) {
+            text = searchPojo.query;
+            pos = text.indexOf(": ") + 2;
+            len = text.length() - pos;
+            image.setImageResource(R.drawable.ic_netif);
         } else {
             throw new IllegalArgumentException();
         }
@@ -104,8 +109,8 @@ public class SearchResult extends Result {
     @Override
     public void doLaunch(Context context, View v) {
         switch (searchPojo.type) {
-            case SearchPojo.URL_QUERY:
-            case SearchPojo.SEARCH_QUERY:
+            case URL:
+            case SEARCH:
                 if (isGoogleSearch()) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
@@ -133,8 +138,12 @@ public class SearchResult extends Result {
                     Log.w("SearchResult", "Unable to run search for url: " + searchPojo.url);
                 }
                 break;
-            case SearchPojo.CALCULATOR_QUERY:
+            case CALCULATOR:
                 ClipboardUtils.setClipboard(context, searchPojo.query.substring(searchPojo.query.indexOf("=") + 2));
+                Toast.makeText(context, R.string.copy_confirmation, Toast.LENGTH_SHORT).show();
+                break;
+            case IP:
+                ClipboardUtils.setClipboard(context, searchPojo.query.substring(searchPojo.query.indexOf(": ") + 2));
                 Toast.makeText(context, R.string.copy_confirmation, Toast.LENGTH_SHORT).show();
                 break;
         }

@@ -70,7 +70,7 @@ public class CalculatorProvider extends SimpleProvider {
             }
 
             String queryProcessed = operation + readableResult;
-            SearchPojo pojo = new SearchPojo("calculator://", queryProcessed, "", SearchPojo.CALCULATOR_QUERY);
+            SearchPojo pojo = new SearchPojo("calculator://", queryProcessed, "", SearchPojo.Type.CALCULATOR);
 
             pojo.relevance = 19;
             searcher.addResult(pojo);
