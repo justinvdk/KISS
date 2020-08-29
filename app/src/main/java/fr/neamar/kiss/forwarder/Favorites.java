@@ -194,7 +194,8 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
 
     void updateSearchRecords(String query) {
         if (query.isEmpty()) {
-            mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+//            mainActivity.favoritesBar.setVisibility(View.VISIBLE);
+            mainActivity.keyboardHelper.showBottom(false);
         } else {
 //            mainActivity.favoritesBar.setVisibility(View.GONE);
         }

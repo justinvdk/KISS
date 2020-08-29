@@ -85,10 +85,6 @@ public class ForwarderManager extends Forwarder {
         return liveWallpaperForwarder.onTouch(view, event);
     }
 
-    public void onWindowFocusChanged(boolean hasFocus) {
-        experienceTweaks.onWindowFocusChanged(hasFocus);
-    }
-
     public void onDataSetChanged() {
         widgetsForwarder.onDataSetChanged();
         favoritesForwarder.onDataSetChanged();
