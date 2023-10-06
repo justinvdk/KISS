@@ -58,7 +58,6 @@ class ExperienceTweaks extends Forwarder {
 
     private View mainEmptyView;
     private final GestureDetector gd;
-    private int lastHeight = 0;
     private boolean historyHideToggle = false;
 
     @SuppressLint("SourceLockedOrientationActivity")
