@@ -11,7 +11,7 @@
             android:order="10"
             android:title="@string/reset_name" />
         <EditTextPreference
-            android:defaultValue="20"
+            android:defaultValue="25"
             android:inputType="number"
             android:key="number-of-display-elements"
             android:order="45"
@@ -107,7 +107,7 @@
         android:summary="@string/user_interface_summary"
         android:title="@string/title_ui">
         <ListPreference
-            android:defaultValue="transparent"
+            android:defaultValue="semi-transparent-dark"
             android:entries="@array/themesEntries"
             android:entryValues="@array/themesValues"
             android:key="theme"
@@ -228,7 +228,7 @@
                 android:key="transparent-search"
                 android:title="@string/transparent_search_bar" />
             <fr.neamar.kiss.preference.SwitchPreference
-                android:defaultValue="true"
+                android:defaultValue="false"
                 android:key="transparent-favorites"
                 android:title="@string/transparent_favorites_bar" />
             <fr.neamar.kiss.preference.SwitchPreference
@@ -240,7 +240,7 @@
                 android:key="pref-rounded-list"
                 android:title="@string/rounded_list" />
             <fr.neamar.kiss.preference.SwitchPreference
-                android:defaultValue="true"
+                android:defaultValue="false"
                 android:key="pref-rounded-bars"
                 android:title="@string/rounded_bars" />
             <fr.neamar.kiss.preference.SwitchPreference
@@ -275,7 +275,7 @@
             android:key="history-hide-section"
             android:title="@string/history_hide_name">
             <fr.neamar.kiss.preference.SwitchPreference
-                android:defaultValue="false"
+                android:defaultValue="true"
                 android:key="history-hide"
                 android:summary="@string/history_hide_desc"
                 android:title="@string/history_hide_name" />
@@ -291,7 +291,7 @@
                 android:summary="@string/history_onkeyboard_desc"
                 android:title="@string/history_onkeyboard_name" />
             <fr.neamar.kiss.preference.SwitchPreference
-                android:defaultValue="false"
+                android:defaultValue="true"
                 android:dependency="history-hide"
                 android:key="history-home-toggle"
                 android:title="@string/history_onclick_home_name" />
@@ -320,31 +320,31 @@
             android:key="gestures-holder"
             android:title="@string/gestures">
             <ListPreference
-                android:defaultValue="display-keyboard"
+                android:defaultValue="do-nothing"
                 android:entries="@array/gestureEntries"
                 android:entryValues="@array/gestureValues"
                 android:key="gesture-up"
                 android:title="@string/gesture_up_name" />
             <ListPreference
-                android:defaultValue="display-notifications"
+                android:defaultValue="do-nothing"
                 android:entries="@array/gestureEntries"
                 android:entryValues="@array/gestureValues"
                 android:key="gesture-down"
                 android:title="@string/gesture_down_name" />
             <ListPreference
-                android:defaultValue="display-apps"
+                android:defaultValue="do-nothing"
                 android:entries="@array/gestureEntries"
                 android:entryValues="@array/gestureValues"
                 android:key="gesture-left"
                 android:title="@string/gesture_left_name" />
             <ListPreference
-                android:defaultValue="display-apps"
+                android:defaultValue="do-nothing"
                 android:entries="@array/gestureEntries"
                 android:entryValues="@array/gestureValues"
                 android:key="gesture-right"
                 android:title="@string/gesture_right_name" />
             <ListPreference
-                android:defaultValue="display-apps"
+                android:defaultValue="do-nothing"
                 android:entries="@array/gestureEntries"
                 android:entryValues="@array/gestureValues"
                 android:key="gesture-long-press"
@@ -356,7 +356,7 @@
         </PreferenceCategory>
         <PreferenceCategory android:title="@string/misc">
             <fr.neamar.kiss.preference.SwitchPreference
-                android:defaultValue="false"
+                android:defaultValue="true"
                 android:key="force-portrait"
                 android:title="@string/portrait_title" />
             <fr.neamar.kiss.preference.SwitchPreference
