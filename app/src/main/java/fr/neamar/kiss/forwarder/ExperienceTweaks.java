@@ -391,7 +391,7 @@ class ExperienceTweaks extends Forwarder {
     }
 
     public void onNewIntent(Intent intent) {
-        if (prefs.getBoolean("history-home-toggle", false)){
+        if (prefs.getBoolean("history-home-toggle", true)){
             // There doesn't seem to be a way to distinguish from getting back from somewhere
             // else or just pressing the home button. I used to check the last onPause and whether it
             // had occured JUST before this call, but that doesn't seem to work (anymore?).
