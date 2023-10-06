@@ -174,7 +174,6 @@ class ExperienceTweaks extends Forwarder {
                         // TODO: remove
                         break;
                     case "hide-keyboard":
-                        mainActivity.hideKeyboard();
                         break;
                     case "display-apps":
                         if (mainActivity.isViewingSearchResults()) {
@@ -211,7 +210,6 @@ class ExperienceTweaks extends Forwarder {
                     case "go-to-homescreen":
                         mainActivity.displayKissBar(false);
                         if (!shouldShowKeyboard()) {
-                            mainActivity.hideKeyboard();
                         }
                         break;
                     case "launch-pojo": {

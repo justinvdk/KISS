@@ -59,9 +59,7 @@ public class ForwarderManager extends Forwarder {
     public void onStop() {
     }
 
-    public void onGlobalLayout()
-    {
-        experienceTweaks.onGlobalLayout();
+    public void onGlobalLayout() {
     }
 
     public void onNewIntent(Intent intent) {

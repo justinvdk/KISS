@@ -126,7 +126,7 @@ public class SearchProvider extends SimpleProvider {
     }
 
     /**
-     * create SearchPojo with type {@link SearchPojo#URI_QUERY} for direct access to url
+     * create SearchPojo with type {@link SearchPojo.Type#URL} for direct access to url
      *
      * @param url
      * @return the search pojo
@@ -139,7 +139,7 @@ public class SearchProvider extends SimpleProvider {
         // (tradeoff: non https URL will break, but they shouldn't exist anymore)
         url = url.replace("http://", "https://");
 
-        SearchPojo pojo = new SearchPojo("search://url-access", "", url, SearchPojo.URL_QUERY);
+        SearchPojo pojo = new SearchPojo("search://url-access", "", url, SearchPojo.Type.URL);
         pojo.relevance = 50;
         pojo.setName(url, false);
         return pojo;
@@ -187,6 +187,6 @@ public class SearchProvider extends SimpleProvider {
         String defaultSearchEngine = pref.getString("default-search-provider", "Google");
         Set<String> availableProviders = pref.getStringSet("available-search-providers", SearchProvider.getDefaultSearchProviders(context));
         String url = getProviderUrl(availableProviders, defaultSearchEngine);
-        return url != null ? new SearchPojo(query, url, SearchPojo.SEARCH_QUERY) : null;
+        return url != null ? new SearchPojo(query, url, SearchPojo.Type.SEARCH) : null;
     }
 }
