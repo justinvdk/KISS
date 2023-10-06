@@ -1,6 +1,5 @@
 package fr.neamar.kiss.dataprovider;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,10 +10,9 @@ import android.os.Process;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
 
-import androidx.annotation.RequiresApi;
-
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.List;
+import java.util.Set;
 
 import fr.neamar.kiss.KissApplication;
 import fr.neamar.kiss.broadcast.PackageAddedRemovedHandler;
@@ -30,7 +28,7 @@ public class AppProvider extends Provider<AppPojo> {
 
     @Override
     public void onCreate() {
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // Package installation/uninstallation events for the main
             // profile are still handled using PackageAddedRemovedHandler itself
             final UserManager manager = (UserManager) this.getSystemService(Context.USER_SERVICE);
@@ -42,84 +40,67 @@ public class AppProvider extends Provider<AppPojo> {
             launcher.registerCallback(new LauncherAppsCallback() {
                 @Override
                 public void onPackageAdded(String packageName, android.os.UserHandle user) {
-                    if (!Process.myUserHandle().equals(user)) {
-                        PackageAddedRemovedHandler.handleEvent(AppProvider.this,
-                                Intent.ACTION_PACKAGE_ADDED,
-                                packageName, new UserHandle(manager.getSerialNumberForUser(user), user), false
-                        );
-                    }
+                    handleEvent(Intent.ACTION_PACKAGE_ADDED, packageName, user, false);
                 }
 
                 @Override
                 public void onPackageChanged(String packageName, android.os.UserHandle user) {
-                    if (!Process.myUserHandle().equals(user)) {
-                        PackageAddedRemovedHandler.handleEvent(AppProvider.this,
-                                Intent.ACTION_PACKAGE_ADDED,
-                                packageName, new UserHandle(manager.getSerialNumberForUser(user), user), true
-                        );
-                    }
+                    handleEvent(Intent.ACTION_PACKAGE_CHANGED, packageName, user, true);
                 }
 
                 @Override
                 public void onPackageRemoved(String packageName, android.os.UserHandle user) {
-                    if (!Process.myUserHandle().equals(user)) {
-                        PackageAddedRemovedHandler.handleEvent(AppProvider.this,
-                                Intent.ACTION_PACKAGE_REMOVED,
-                                packageName, new UserHandle(manager.getSerialNumberForUser(user), user), false
-                        );
-                    }
+                    handleEvent(Intent.ACTION_PACKAGE_REMOVED, packageName, user, false);
                 }
 
                 @Override
                 public void onPackagesAvailable(String[] packageNames, android.os.UserHandle user, boolean replacing) {
-                    if (!Process.myUserHandle().equals(user)) {
-                        PackageAddedRemovedHandler.handleEvent(AppProvider.this,
-                                Intent.ACTION_MEDIA_MOUNTED,
-                                null, new UserHandle(manager.getSerialNumberForUser(user), user), false
-                        );
+                    handleEvent(Intent.ACTION_MEDIA_MOUNTED, null, user, replacing);
+                }
+
+                @Override
+                public void onPackagesSuspended(String[] packageNames, android.os.UserHandle user) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        handleEvent(Intent.ACTION_PACKAGES_SUSPENDED, null, user, false);
+                    }
+                }
+
+                @Override
+                public void onPackagesUnsuspended(String[] packageNames, android.os.UserHandle user) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        handleEvent(Intent.ACTION_PACKAGES_UNSUSPENDED, null, user, false);
                     }
                 }
 
                 @Override
                 public void onPackagesUnavailable(String[] packageNames, android.os.UserHandle user, boolean replacing) {
+                    handleEvent(Intent.ACTION_MEDIA_UNMOUNTED, null, user, replacing);
+                }
+
+                private void handleEvent(String action, String packageName, android.os.UserHandle user, boolean replacing) {
                     if (!Process.myUserHandle().equals(user)) {
                         PackageAddedRemovedHandler.handleEvent(AppProvider.this,
-                                Intent.ACTION_MEDIA_UNMOUNTED,
-                                null, new UserHandle(manager.getSerialNumberForUser(user), user), false
+                                action,
+                                packageName, new UserHandle(manager.getSerialNumberForUser(user), user), replacing
                         );
                     }
                 }
             });
-
-            // Try to clean up app-related data when profile is removed
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(Intent.ACTION_MANAGED_PROFILE_ADDED);
-            filter.addAction(Intent.ACTION_MANAGED_PROFILE_REMOVED);
-            this.registerReceiver(new BroadcastReceiver() {
-                @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    if (Objects.equals(intent.getAction(), Intent.ACTION_MANAGED_PROFILE_ADDED)) {
-                        AppProvider.this.reload();
-                    } else if (Objects.equals(intent.getAction(), Intent.ACTION_MANAGED_PROFILE_REMOVED)) {
-                        android.os.UserHandle profile = intent.getParcelableExtra(Intent.EXTRA_USER);
-
-                        UserHandle user = new UserHandle(manager.getSerialNumberForUser(profile), profile);
-
-                        KissApplication.getApplication(context).getDataHandler().removeFromExcluded(user);
-                        KissApplication.getApplication(context).getDataHandler().removeFromFavorites(user);
-                        AppProvider.this.reload();
-                    }
-                }
-            }, filter);
         }
 
         // Get notified when app changes on standard user profile
         IntentFilter appChangedFilter = new IntentFilter();
         appChangedFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        appChangedFilter.addAction(Intent.ACTION_PACKAGE_CHANGED);
         appChangedFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
         appChangedFilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
         appChangedFilter.addAction(Intent.ACTION_MEDIA_REMOVED);
+        appChangedFilter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);
+        appChangedFilter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            appChangedFilter.addAction(Intent.ACTION_PACKAGES_SUSPENDED);
+            appChangedFilter.addAction(Intent.ACTION_PACKAGES_UNSUSPENDED);
+        }
         appChangedFilter.addDataScheme("package");
         appChangedFilter.addDataScheme("file");
         this.registerReceiver(new PackageAddedRemovedHandler(), appChangedFilter);
@@ -140,6 +121,8 @@ public class AppProvider extends Provider<AppPojo> {
 
     @Override
     public void requestResults(String query, Searcher searcher) {
+        Set<String> excludedFavoriteIds = KissApplication.getApplication(this).getDataHandler().getExcludedFavorites();
+
         StringNormalizer.Result queryNormalized = StringNormalizer.normalizeWithResult(query, false);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (queryNormalized.codePoints.length == 0) {
@@ -147,25 +130,24 @@ public class AppProvider extends Provider<AppPojo> {
         }
 
         FuzzyScore fuzzyScore = new FuzzyScore(queryNormalized.codePoints);
-        FuzzyScore.MatchInfo matchInfo;
-        boolean match;
 
         for (AppPojo pojo : pojos) {
-            if(pojo.isExcluded() && !prefs.getBoolean("enable-excluded-apps", false)) {
+            // exclude apps from results
+            if (pojo.isExcluded() && !prefs.getBoolean("enable-excluded-apps", false)) {
+                continue;
+            }
+            // exclude favorites from results
+            if (excludedFavoriteIds.contains(pojo.getFavoriteId())) {
                 continue;
             }
 
-            matchInfo = fuzzyScore.match(pojo.normalizedName.codePoints);
-            match = matchInfo.match;
-            pojo.relevance = matchInfo.score;
+            FuzzyScore.MatchInfo matchInfo = fuzzyScore.match(pojo.normalizedName.codePoints);
+            boolean match = pojo.updateMatchingRelevance(matchInfo, false);
 
             // check relevance for tags
             if (pojo.getNormalizedTags() != null) {
                 matchInfo = fuzzyScore.match(pojo.getNormalizedTags().codePoints);
-                if (matchInfo.match && (!match || matchInfo.score > pojo.relevance)) {
-                    match = true;
-                    pojo.relevance = matchInfo.score;
-                }
+                match = pojo.updateMatchingRelevance(matchInfo, match);
             }
 
             if (match && !searcher.addResult(pojo)) {
@@ -177,7 +159,7 @@ public class AppProvider extends Provider<AppPojo> {
     /**
      * Return a Pojo
      *
-     * @param id              we're looking for
+     * @param id we're looking for
      * @return an AppPojo, or null
      */
     @Override
@@ -191,8 +173,8 @@ public class AppProvider extends Provider<AppPojo> {
         return null;
     }
 
-    public ArrayList<AppPojo> getAllApps() {
-        ArrayList<AppPojo> records = new ArrayList<>(pojos.size());
+    public List<AppPojo> getAllApps() {
+        List<AppPojo> records = new ArrayList<>(pojos.size());
 
         for (AppPojo pojo : pojos) {
             pojo.relevance = 0;
@@ -201,11 +183,11 @@ public class AppProvider extends Provider<AppPojo> {
         return records;
     }
 
-    public ArrayList<AppPojo> getAllAppsWithoutExcluded() {
-        ArrayList<AppPojo> records = new ArrayList<>(pojos.size());
+    public List<AppPojo> getAllAppsWithoutExcluded() {
+        List<AppPojo> records = new ArrayList<>(pojos.size());
 
         for (AppPojo pojo : pojos) {
-            if(pojo.isExcluded()) continue;
+            if (pojo.isExcluded()) continue;
 
             pojo.relevance = 0;
             records.add(pojo);

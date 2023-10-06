@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Iniciador KISS</string>
+    <string name="app_name">KISS launcher</string>
     <string name="activity_setting">Configuración de KISS</string>
     <string name="ui_search_hint">Buscar aplicaciones, contactos, …</string>
     <string name="ui_item_search">Buscar «%2$s» en %1$s</string>
@@ -23,8 +23,8 @@
     <string name="shortcuts_name">Atajos</string>
     <string name="main_menu">Menú</string>
     <string name="main_clear">Vaciar barra de búsqueda</string>
-    <string name="main_kiss">Mostrar lista de aplicaciones</string>
-    <string name="main_kiss_back">Mostrar historial</string>
+    <string name="main_kiss">Mostrar la lista de aplicaciones</string>
+    <string name="main_kiss_back">Mostrar el historial</string>
     <string name="reset_name">Restablecer historial</string>
     <string name="reset_excluded_apps_name">Restablecer apps excluidas de KISS</string>
     <string name="reset_excluded_apps_warn">¿Realmente quiere restablecer la lista de aplicaciones excluidas\?</string>
@@ -179,8 +179,8 @@
     <string name="pref_tags_menu">Añadir etiquetas en el menú</string>
     <string name="popup_tags_title">Etiquetas disponibles</string>
     <string name="popup_tags_actions">Acciones disponibles</string>
-    <string name="show_history">Mostrar historial</string>
-    <string name="unable_to_initialize_shortcuts">No se pudieron inicializar los atajos. Asegúrese de configurar KISS como iniciador predeterminado.</string>
+    <string name="show_history">Ver el historial</string>
+    <string name="unable_to_initialize_shortcuts">No se pueden recuperar los atajos. ¿KISS es su lanzador predeterminado\?</string>
     <string name="pref_tags_menu_dismiss">Cerrar menú de etiquetas luego de la selección</string>
     <string name="show_untagged">Mostrar items sin etiquetas</string>
     <string name="pref_show_untagged">Mostrar acción para los elementos sin etiqueta</string>
@@ -188,7 +188,7 @@
     <string name="pref_hide_circle_desc">Los botones seguirán funcionando pero serán invisibles.</string>
     <string name="reset_excluded_from_history_apps_name">Restablecer apps excluidas del historial</string>
     <string name="reset_excluded_from_history_apps_warn">¿Realmente quiere restablecer la lista de aplicaciones excluidas del historial\?</string>
-    <string name="settings_excluded_apps">Aplicaciones excluidas</string>
+    <string name="settings_excluded_apps">Entradas excluidas</string>
     <string name="ui_excluded_from_history_apps">Ver o editar apps excluidas del historial</string>
     <string name="excluded_app_history_added">App excluida del historial. Reinicia KISS en los ajustes avanzados si fue un error</string>
     <string name="menu_exclude_kiss">de KISS</string>
@@ -215,16 +215,15 @@
     <string name="menu_size_up">Ampliar</string>
     <string name="menu_widget_move_up">Mover arriba</string>
     <string name="menu_widget_move_down">Mover abajo</string>
-    <string name="enable_double_tap_to_lock">Para bloquear la pantalla con doble toque, necesitas dar permisos adicionales: activa KISS en la pantalla a continuación.</string>
+    <string name="enable_double_tap_to_lock">Tocar dos veces para bloquear necesita de la API de accesibilidad de Android. No se procesan datos, no se almacenan datos. Para usar esta función, habilite KISS en la siguiente pantalla.</string>
     <string name="gesture_down_name">Acción al deslizar hacia abajo</string>
     <string name="gesture_up_name">Acción al deslizar hacia arriba</string>
     <string name="lock_service_description">Bloquear la pantalla desde KISS Launcher</string>
     <string name="double_tap_to_lock">Tocar dos veces para bloquear la pantalla</string>
     <string name="gestures">Gestos</string>
     <string name="show_subicons">Mostrar icono de aplicación en atajos</string>
-    <string name="small_results">Mostrar resultados más pequeños</string>
-    <string name="gesture_history">Mostrar historial</string>
-    <string name="gesture_apps">Mostrar lista de aplicaciones</string>
+    <string name="gesture_history">Mostrar el historial</string>
+    <string name="gesture_apps">Mostrar la lista de las aplicaciones</string>
     <string name="gesture_notifications">Mostrar panel de notificaciones</string>
     <string name="gesture_keyboard">Mostrar teclado</string>
     <string name="gesture_do_nothing">No hacer nada</string>
@@ -248,10 +247,6 @@
     <string name="theme_shadow">Contorno del texto (sombra)</string>
     <string name="theme_customisation">Personalización avanzada de temas</string>
     <string name="hide_search_bar_hint">Remover texto de ayuda de la barra de búsqueda</string>
-    <string name="icons_pack_teardrop_name">Lágrima</string>
-    <string name="icons_pack_circle_name">Círculo</string>
-    <string name="icons_pack_square_name">Cuadrado</string>
-    <string name="icons_pack_squircle_name">Hiperelipse</string>
     <string name="theme_wallpaper">Fondo de pantalla</string>
     <string name="gesture_right_name">Acción al deslizar a la derecha</string>
     <string name="gesture_left_name">Acción al deslizar a la izquierda</string>
@@ -305,7 +300,7 @@
     <string name="shape_app">Forma de aplicación</string>
     <string name="shape_circle">Círculo</string>
     <string name="shape_square">Cuadrado</string>
-    <string name="shape_squircle">Squircle</string>
+    <string name="shape_squircle">Círculo cuadrado</string>
     <string name="shape_rounded_rectangle">Rectángulo redondeado</string>
     <string name="shape_teardrop_bottom_right">Lágrima inferior derecha</string>
     <string name="shape_teardrop_bottom_left">Lágrima inferior izquierda</string>
@@ -316,4 +311,14 @@
     <string name="gesture_launch_pojo">Lanzar…</string>
     <string name="excluded_apps_toggle">Mostrar apps excluidas en la búsqueda</string>
     <string name="always_default_web_search_on_enter">Siempre abrir proveedor de búsqueda principal al dar enter</string>
+    <string name="large_result_list_margins">Márgenes de lista más grandes</string>
+    <string name="results_size">Tamaño de los resultados</string>
+    <string name="ui_excluded_from_shortcuts_apps">Ver o editar aplicaciones que no muestran accesos directos</string>
+    <string name="reset_excluded_app_shortcuts_name">Restablecer la lista de aplicaciones que no muestran accesos directos</string>
+    <string name="reset_excluded_app_shortcuts_warn">¿Realmente desea restablecer la lista de aplicaciones que no muestran accesos directos\?</string>
+    <string name="icons_themed_summary">Los iconos se tiñen con los colores del sistema (beta)</string>
+    <string name="color_system">Colores del sistema</string>
+    <string name="icons_themed_name">Iconos temáticos</string>
+    <string name="menu_shortcut_pin">Acceso directo al pin</string>
+    <string name="search_provider_error_uri_cannot_be_handle">El URI proporcionado no puede ser manejado por ninguna aplicación en tu dispositivo.</string>
 </resources>

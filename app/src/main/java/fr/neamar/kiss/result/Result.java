@@ -22,13 +22,16 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.ref.WeakReference;
-import java.util.List;
-
+import androidx.annotation.DrawableRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.annotation.StyleableRes;
+
+import java.lang.ref.WeakReference;
+import java.util.List;
+import java.util.Locale;
 
 import fr.neamar.kiss.BuildConfig;
 import fr.neamar.kiss.KissApplication;
@@ -50,18 +53,19 @@ import fr.neamar.kiss.searcher.QueryInterface;
 import fr.neamar.kiss.ui.ListPopup;
 import fr.neamar.kiss.utils.FuzzyScore;
 
-public abstract class Result {
+public abstract class Result<T extends Pojo> {
+
     /**
      * Current information pojo
      */
     @NonNull
-    final Pojo pojo;
+    protected final T pojo;
 
-    Result(@NonNull Pojo pojo) {
+    Result(@NonNull T pojo) {
         this.pojo = pojo;
     }
 
-    public static Result fromPojo(QueryInterface parent, Pojo pojo) {
+    public static Result<?> fromPojo(QueryInterface parent, @NonNull Pojo pojo) {
         if (pojo instanceof AppPojo)
             return new AppResult((AppPojo) pojo);
         else if (pojo instanceof ContactsPojo)
@@ -75,10 +79,9 @@ public abstract class Result {
         else if (pojo instanceof ShortcutPojo)
             return new ShortcutsResult((ShortcutPojo) pojo);
         else if (pojo instanceof TagDummyPojo)
-            return new TagDummyResult((TagDummyPojo)pojo);
+            return new TagDummyResult((TagDummyPojo) pojo);
 
-
-        throw new RuntimeException("Unable to create a result from POJO");
+        throw new UnsupportedOperationException("Unable to create a result from POJO");
     }
 
     public String getPojoId() {
@@ -105,12 +108,8 @@ public abstract class Result {
     @NonNull
     public View inflateFavorite(@NonNull Context context, @NonNull ViewGroup parent) {
         View favoriteView = LayoutInflater.from(context).inflate(R.layout.favorite_item, parent, false);
-        Drawable drawable = getDrawable(context);
         ImageView favoriteImage = favoriteView.findViewById(R.id.favorite);
-        if (drawable == null)
-            favoriteImage.setImageResource(R.drawable.ic_launcher_white);
-        else
-            favoriteImage.setImageDrawable(drawable);
+        setAsyncDrawable(favoriteImage, R.drawable.ic_launcher_white);
         favoriteView.setContentDescription(pojo.getName());
         return favoriteView;
     }
@@ -131,7 +130,7 @@ public abstract class Result {
     }
 
     boolean displayHighlighted(StringNormalizer.Result normalized, String text, FuzzyScore fuzzyScore,
-                                      TextView view, Context context) {
+                               TextView view, Context context) {
         FuzzyScore.MatchInfo matchInfo = fuzzyScore.match(normalized.codePoints);
 
         if (!matchInfo.match) {
@@ -161,7 +160,7 @@ public abstract class Result {
             String ch = Character.toString((char) pojo.normalizedName.codePoints[0]);
             // convert to uppercase otherwise lowercase a -z will be sorted
             // after upper A-Z
-            return ch.toUpperCase();
+            return ch.toUpperCase(Locale.getDefault());
         } catch (ArrayIndexOutOfBoundsException e) {
             // Normalized name is empty.
             return "-";
@@ -212,15 +211,17 @@ public abstract class Result {
             for (int i = 0; i < adapter.getCount(); i += 1) {
                 ListPopup.Item item = adapter.getItem(i);
                 assert item != null;
-                if (item.stringId == R.string.menu_favorites_add)
+                if (item.stringId == R.string.menu_favorites_add) {
                     adapter.remove(item);
+                }
             }
         } else {
             for (int i = 0; i < adapter.getCount(); i += 1) {
                 ListPopup.Item item = adapter.getItem(i);
                 assert item != null;
-                if (item.stringId == R.string.menu_favorites_remove)
+                if (item.stringId == R.string.menu_favorites_remove) {
                     adapter.remove(item);
+                }
             }
         }
 
@@ -238,16 +239,13 @@ public abstract class Result {
      * @return Works in the same way as onOptionsItemSelected, return true if the action has been handled, false otherwise
      */
     boolean popupMenuClickHandler(Context context, RecordAdapter parent, @StringRes int stringId, View parentView) {
-        switch (stringId) {
-            case R.string.menu_remove:
-                removeFromResultsAndHistory(context, parent);
-                return true;
-            case R.string.menu_favorites_add:
-                launchAddToFavorites(context, pojo);
-                break;
-            case R.string.menu_favorites_remove:
-                launchRemoveFromFavorites(context, pojo);
-                break;
+        if (stringId == R.string.menu_remove) {
+            removeFromResultsAndHistory(context, parent);
+            return true;
+        } else if (stringId == R.string.menu_favorites_add) {
+            launchAddToFavorites(context, pojo);
+        } else if (stringId == R.string.menu_favorites_remove) {
+            launchRemoveFromFavorites(context, pojo);
         }
 
         MainActivity mainActivity = (MainActivity) context;
@@ -286,8 +284,8 @@ public abstract class Result {
         parent.removeResult(context, this);
     }
 
-    public final void launch(Context context, View v, QueryInterface queryInterface) {
-        Log.i("log", "Launching " + pojo.id);
+    public final void launch(Context context, View v, @Nullable QueryInterface queryInterface) {
+        Log.i(this.getClass().getSimpleName(), "Launching " + pojo.id);
 
         // Launch
         doLaunch(context, v);
@@ -295,7 +293,7 @@ public abstract class Result {
         recordLaunch(context, queryInterface);
     }
 
-    void recordLaunch(Context context, QueryInterface queryInterface) {
+    void recordLaunch(Context context, @Nullable QueryInterface queryInterface) {
         // Record the launch after some period,
         // * to ensure the animation runs smoothly
         // * to avoid a flickering -- launchOccurred will refresh the list
@@ -339,6 +337,7 @@ public abstract class Result {
     /**
      * Does the drawable changes regularly?
      * If so, it can't be kept in cache for long.
+     *
      * @return true when dynamic
      */
     public boolean isDrawableDynamic() {
@@ -353,32 +352,41 @@ public abstract class Result {
     }
 
     void setAsyncDrawable(ImageView view) {
-        // the ImageView tag will store the async task if it's running
-        if (view.getTag() instanceof AsyncSetImage) {
-            AsyncSetImage asyncSetImage = (AsyncSetImage) view.getTag();
-            if (this.equals(asyncSetImage.appResultWeakReference.get())) {
-                // we are already loading the icon for this
-                return;
-            } else {
-                asyncSetImage.cancel(true);
-                view.setTag(null);
+        setAsyncDrawable(view, android.R.color.transparent);
+    }
+
+    <U extends Pojo> void setAsyncDrawable(ImageView view, @DrawableRes int resId) {
+        // getting this called multiple times in parallel may result in empty icons
+        synchronized (this) {
+            // the ImageView tag will store the async task if it's running
+            if (view.getTag() instanceof AsyncSetImage) {
+                AsyncSetImage asyncSetImage = (AsyncSetImage) view.getTag();
+                if (this.equals(asyncSetImage.resultWeakReference.get())) {
+                    // we are already loading the icon for this
+                    return;
+                } else {
+                    asyncSetImage.cancel(true);
+                    view.setTag(null);
+                }
             }
-        }
-        // the ImageView will store the Result after the AsyncTask finished
-        else if (this.equals(view.getTag())) {
-            ((Result) view.getTag()).setDrawableCache(view.getDrawable());
-            return;
-        }
-        if (isDrawableCached()) {
-            view.setImageDrawable(getDrawable(view.getContext()));
-            view.setTag(this);
-        } else {
-            view.setTag(createAsyncSetImage(view).execute());
+            // the ImageView will store the Result after the AsyncTask finished
+            else if (this.equals(view.getTag())) {
+                ((Result<U>) view.getTag()).setDrawableCache(view.getDrawable());
+                return;
+            }
+            if (isDrawableCached()) {
+                view.setImageDrawable(getDrawable(view.getContext()));
+                view.setTag(this);
+            } else {
+                // use AsyncTask.SERIAL_EXECUTOR explicitly for now
+                // TODO: make execution parallel if needed/possible
+                view.setTag(createAsyncSetImage(view, resId).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR));
+            }
         }
     }
 
-    private AsyncSetImage createAsyncSetImage(ImageView imageView) {
-        return new AsyncSetImage(imageView, this);
+    private AsyncSetImage createAsyncSetImage(ImageView imageView, @DrawableRes int resId) {
+        return new AsyncSetImage(imageView, this, resId);
     }
 
     /**
@@ -418,14 +426,14 @@ public abstract class Result {
 
     static class AsyncSetImage extends AsyncTask<Void, Void, Drawable> {
         final WeakReference<ImageView> imageViewWeakReference;
-        final WeakReference<Result> appResultWeakReference;
+        final WeakReference<Result<?>> resultWeakReference;
 
-        AsyncSetImage(ImageView image, Result result) {
+        AsyncSetImage(ImageView image, Result<?> result, @DrawableRes int resId) {
             super();
             image.setTag(this);
-            image.setImageResource(android.R.color.transparent);
+            image.setImageResource(resId);
             this.imageViewWeakReference = new WeakReference<>(image);
-            this.appResultWeakReference = new WeakReference<>(result);
+            this.resultWeakReference = new WeakReference<>(result);
         }
 
         @Override
@@ -435,9 +443,10 @@ public abstract class Result {
                 imageViewWeakReference.clear();
                 return null;
             }
-            Result result = appResultWeakReference.get();
-            if (result == null)
+            Result<?> result = resultWeakReference.get();
+            if (result == null) {
                 return null;
+            }
             return result.getDrawable(image.getContext());
         }
 
@@ -449,7 +458,7 @@ public abstract class Result {
                 return;
             }
             image.setImageDrawable(drawable);
-            image.setTag(appResultWeakReference.get());
+            image.setTag(resultWeakReference.get());
         }
     }
 }

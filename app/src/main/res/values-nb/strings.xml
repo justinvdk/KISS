@@ -237,11 +237,7 @@
     <string name="theme_customize_default">Draktforvalg</string>
     <string name="theme_customisation">Avansert draktsøm</string>
     <string name="hide_search_bar_hint">Fjern hint fra søkefelt</string>
-    <string name="icons_pack_teardrop_name">Dråpe</string>
-    <string name="icons_pack_circle_name">Sirkel</string>
-    <string name="icons_pack_square_name">Kvadrat</string>
     <string name="theme_separator">Resultatinndeler</string>
-    <string name="small_results">Vis forminskede resultater</string>
     <string name="gesture_history">Vis historikk</string>
     <string name="gesture_apps">Vis programmer først</string>
     <string name="history_alphabetically">Alfabetisk</string>
@@ -251,7 +247,6 @@
     <string name="history_recency">Nylig brukte først</string>
     <string name="theme_result_color">Tekstfarge for resultater</string>
     <string name="theme_shadow">Disposisjon (skygge)</string>
-    <string name="icons_pack_squircle_name">Superellipse</string>
     <string name="theme_wallpaper">Skrivebordsbakgrunn</string>
     <string name="gesture_left_name">Handling for venstrevendt håndvending</string>
     <string name="gesture_right_name">Handling for høyrevendt håndvending</string>
@@ -316,4 +311,12 @@
     <string name="excluded_apps_toggle">Vis ekskluderte programmer i søk</string>
     <string name="gesture_launch_pojo">Kjør …</string>
     <string name="always_default_web_search_on_enter">Alltid utløs forvalgt nettsøketilbyder når enter trykkes</string>
+    <string name="results_size">Resulterende visningsstørrelse</string>
+    <string name="large_result_list_margins">Større listemarginer</string>
+    <string name="reset_excluded_app_shortcuts_name">Tilbakestill liste over programmer som er ekskludert fra visning av snarveier</string>
+    <string name="reset_excluded_app_shortcuts_warn">Tilbakestill liste over programmer ekskludert fra visning av snarveier\?</string>
+    <string name="ui_excluded_from_shortcuts_apps">Vis eller rediger programmer ekskludert fra visning av snarveier</string>
+    <string name="color_system">Systemfargene</string>
+    <string name="icons_themed_summary">Ikoner gis fargeskikk i systemfargene (beta)</string>
+    <string name="icons_themed_name">Draktikoner</string>
 </resources>

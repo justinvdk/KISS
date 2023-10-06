@@ -5,9 +5,12 @@ import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Build;
+import android.os.Handler;
+import android.os.UserHandle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
@@ -20,17 +23,23 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import fr.neamar.kiss.MainActivity;
+import fr.neamar.kiss.PickAppWidgetActivity;
 import fr.neamar.kiss.R;
 import fr.neamar.kiss.ui.WidgetHost;
 
 class Widgets extends Forwarder {
+    private static final String TAG = Widgets.class.getSimpleName();
     private static final int REQUEST_APPWIDGET_PICKED = 9;
+    private static final int REQUEST_APPWIDGET_BOUND = 11;
     private static final int REQUEST_APPWIDGET_CONFIGURED = 5;
 
     private static final int APPWIDGET_HOST_ID = 442;
@@ -65,34 +74,60 @@ class Widgets extends Forwarder {
     }
 
     void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == Activity.RESULT_OK) {
-            switch (requestCode) {
-                case REQUEST_APPWIDGET_CONFIGURED:
-                    Log.i("Widgets", "Widget configured");
-                    break;
-                case REQUEST_APPWIDGET_PICKED:
-                    configureAppWidget(data);
-                    break;
-            }
-        } else if (resultCode == Activity.RESULT_CANCELED && data != null && (requestCode == REQUEST_APPWIDGET_CONFIGURED || requestCode == REQUEST_APPWIDGET_PICKED)) {
-            // if widget was not selected, delete it
-            int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
-            if (appWidgetId != -1) {
-                // find widget views for appWidgetId
-                List<View> viewsToRemove = new ArrayList<>();
-                for (int i = 0; i < widgetArea.getChildCount(); i++) {
-                    AppWidgetHostView view = (AppWidgetHostView) widgetArea.getChildAt(i);
-                    if (view.getAppWidgetId() == appWidgetId) {
-                        viewsToRemove.add(view);
+        switch (resultCode) {
+            case Activity.RESULT_OK:
+                switch (requestCode) {
+                    case REQUEST_APPWIDGET_CONFIGURED:
+                        Log.i(TAG, "Widget configured");
+                        break;
+                    case REQUEST_APPWIDGET_BOUND:
+                        if (data != null) {
+                            configureAppWidget(data);
+                        } else {
+                            Log.i(TAG, "Widget bind failed");
+                        }
+                        break;
+                    case REQUEST_APPWIDGET_PICKED:
+                        if (data != null) {
+                            if (!data.getBooleanExtra(PickAppWidgetActivity.EXTRA_WIDGET_BIND_ALLOWED, false)) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    requestBindWidget(mainActivity, data);
+                                    break;
+                                }
+                            }
+                            // if binding not required we can continue with adding the widget
+                            configureAppWidget(data);
+                        } else {
+                            Log.i(TAG, "Widget picker failed");
+                        }
+                        break;
+                }
+                break;
+            case Activity.RESULT_CANCELED:
+                if ((requestCode == REQUEST_APPWIDGET_CONFIGURED ||
+                        requestCode == REQUEST_APPWIDGET_BOUND ||
+                        requestCode == REQUEST_APPWIDGET_PICKED)
+                        && data != null) {
+                    // if widget was not selected, delete it
+                    int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
+                    if (appWidgetId != -1) {
+                        // find widget views for appWidgetId
+                        List<View> viewsToRemove = new ArrayList<>();
+                        for (int i = 0; i < widgetArea.getChildCount(); i++) {
+                            AppWidgetHostView view = (AppWidgetHostView) widgetArea.getChildAt(i);
+                            if (view.getAppWidgetId() == appWidgetId) {
+                                viewsToRemove.add(view);
+                            }
+                        }
+                        // remove view
+                        for (View viewToRemove : viewsToRemove) {
+                            widgetArea.removeView(viewToRemove);
+                        }
+                        // delete widget id
+                        mAppWidgetHost.deleteAppWidgetId(appWidgetId);
                     }
                 }
-                // remove view
-                for (View viewToRemove : viewsToRemove) {
-                    widgetArea.removeView(viewToRemove);
-                }
-                // delete widget id
-                mAppWidgetHost.deleteAppWidgetId(appWidgetId);
-            }
+                break;
         }
     }
 
@@ -100,7 +135,7 @@ class Widgets extends Forwarder {
         if (item.getItemId() == R.id.add_widget) {
             // request widget picker, a selection will lead to a call of onActivityResult
             int appWidgetId = mAppWidgetHost.allocateAppWidgetId();
-            Intent pickIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_PICK);
+            Intent pickIntent = new Intent(mainActivity, PickAppWidgetActivity.class);
             pickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
             mainActivity.startActivityForResult(pickIntent, REQUEST_APPWIDGET_PICKED);
             return true;
@@ -183,7 +218,7 @@ class Widgets extends Forwarder {
     private void addWidget(int appWidgetId, int lineSize) {
         AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
         if (appWidgetInfo == null) {
-            Log.i("Widget", "Unable to retrieve widget by id " + appWidgetId);
+            Log.i(TAG, "Unable to retrieve widget by id " + appWidgetId);
             return;
         }
 
@@ -221,41 +256,35 @@ class Widgets extends Forwarder {
 
             popup.setOnMenuItemClickListener(item -> {
                 popup.dismiss();
-                switch (item.getItemId()) {
-                    case R.id.remove_widget:
-                        parent.removeView(widgetWithMenuCurrentlyDisplayed);
-                        mAppWidgetHost.deleteAppWidgetId(widgetWithMenuCurrentlyDisplayed.getAppWidgetId());
+                int itemId = item.getItemId();
+                if (itemId == R.id.remove_widget) {
+                    parent.removeView(widgetWithMenuCurrentlyDisplayed);
+                    mAppWidgetHost.deleteAppWidgetId(widgetWithMenuCurrentlyDisplayed.getAppWidgetId());
+                    serializeState();
+                    return true;
+                } else if (itemId == R.id.increase_size) {
+                    int newHeight = getIncreasedLineHeight(widgetWithMenuCurrentlyDisplayed);
+                    resizeWidget(widgetWithMenuCurrentlyDisplayed, newHeight);
+                    return true;
+                } else if (itemId == R.id.decrease_size) {
+                    int newHeight = getDecreasedLineHeight(widgetWithMenuCurrentlyDisplayed);
+                    resizeWidget(widgetWithMenuCurrentlyDisplayed, newHeight);
+                    return true;
+                } else if (itemId == R.id.move_up) {
+                    int currentIndex = parent.indexOfChild(widgetWithMenuCurrentlyDisplayed);
+                    if (currentIndex >= 1) {
+                        parent.removeViewAt(currentIndex);
+                        parent.addView(widgetWithMenuCurrentlyDisplayed, currentIndex - 1);
                         serializeState();
                         return true;
-                    case R.id.increase_size: {
-                        int newHeight = getIncreasedLineHeight(widgetWithMenuCurrentlyDisplayed);
-                        resizeWidget(widgetWithMenuCurrentlyDisplayed, newHeight);
+                    }
+                } else if (itemId == R.id.move_down) {
+                    int currentIndex = parent.indexOfChild(widgetWithMenuCurrentlyDisplayed);
+                    if (currentIndex < parent.getChildCount() - 1) {
+                        parent.removeViewAt(currentIndex);
+                        parent.addView(widgetWithMenuCurrentlyDisplayed, currentIndex + 1);
+                        serializeState();
                         return true;
-                    }
-                    case R.id.decrease_size: {
-                        int newHeight = getDecreasedLineHeight(widgetWithMenuCurrentlyDisplayed);
-                        resizeWidget(widgetWithMenuCurrentlyDisplayed, newHeight);
-                        return true;
-                    }
-                    case R.id.move_up: {
-                        int currentIndex = parent.indexOfChild(widgetWithMenuCurrentlyDisplayed);
-                        if (currentIndex >= 1) {
-                            parent.removeViewAt(currentIndex);
-                            parent.addView(widgetWithMenuCurrentlyDisplayed, currentIndex - 1);
-                            serializeState();
-                            return true;
-                        }
-                        break;
-                    }
-                    case R.id.move_down: {
-                        int currentIndex = parent.indexOfChild(widgetWithMenuCurrentlyDisplayed);
-                        if (currentIndex < parent.getChildCount() - 1) {
-                            parent.removeViewAt(currentIndex);
-                            parent.addView(widgetWithMenuCurrentlyDisplayed, currentIndex + 1);
-                            serializeState();
-                            return true;
-                        }
-                        break;
                     }
                 }
 
@@ -369,6 +398,31 @@ class Widgets extends Forwarder {
         serializeState();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    private static void requestBindWidget(@NonNull Activity activity, @NonNull Intent data) {
+        final int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, 0);
+        final ComponentName provider = data.getParcelableExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER);
+        final UserHandle profile;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            profile = data.getParcelableExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER_PROFILE);
+        } else {
+            profile = null;
+        }
+
+        new Handler().postDelayed(() -> {
+            Log.d(TAG, "asking for permission");
+
+            Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_BIND);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, provider);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER_PROFILE, profile);
+            }
+
+            activity.startActivityForResult(intent, REQUEST_APPWIDGET_BOUND);
+        }, 500);
+    }
+
     /**
      * Check if widget needs configuration and display configuration view if necessary,
      * otherwise just add the widget
@@ -387,15 +441,14 @@ class Widgets extends Forwarder {
             // Launch over to configure widget, if needed.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mAppWidgetHost.startAppWidgetConfigureActivityForResult(mainActivity, appWidgetId, 0, REQUEST_APPWIDGET_CONFIGURED, null);
-            }
-            else {
+            } else {
                 Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE);
                 intent.setComponent(appWidgetInfo.configure);
                 intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
                 try {
                     mainActivity.startActivityForResult(intent, REQUEST_APPWIDGET_CONFIGURED);
-                } catch(SecurityException e) {
-                    Toast.makeText(mainActivity,  "KISS doesn't have permission to setup this widget. Believe this is a bug? Please open an issue at https://github.com/Neamar/KISS/issues", Toast.LENGTH_LONG).show();
+                } catch (SecurityException e) {
+                    Toast.makeText(mainActivity, "KISS doesn't have permission to setup this widget. Believe this is a bug? Please open an issue at https://github.com/Neamar/KISS/issues", Toast.LENGTH_LONG).show();
                 }
             }
         }

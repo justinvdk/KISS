@@ -8,7 +8,8 @@
     android:clipToPadding="true"
     android:orientation="vertical"
     android:paddingHorizontal="10dp"
-    android:paddingVertical="5dp">
+    android:paddingVertical="5dp"
+    android:theme="@style/AppThemeDark">
 
     <!-- 68dp = icon_width + 2 * margin_horizontal -->
     <GridView
@@ -95,6 +96,7 @@
             android:layout_marginEnd="@dimen/icon_margin_right"
             android:layout_marginRight="@dimen/icon_margin_right"
             android:layout_marginBottom="@dimen/icon_margin_bottom"
+            android:contentDescription="@null"
             android:src="@drawable/ic_launcher" />
 
         <Button

@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,8 +34,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-
-import java.util.Locale;
 
 import fr.neamar.kiss.CustomIconDialog;
 import fr.neamar.kiss.IconsHandler;
@@ -50,16 +49,16 @@ import fr.neamar.kiss.ui.ListPopup;
 import fr.neamar.kiss.utils.FuzzyScore;
 import fr.neamar.kiss.utils.SpaceTokenizer;
 
-public class AppResult extends Result {
-    private final AppPojo appPojo;
+public class AppResult extends Result<AppPojo> {
+
+    private static final String TAG = AppResult.class.getSimpleName();
     private final ComponentName className;
-    private Drawable icon = null;
+    private volatile Drawable icon = null;
 
-    AppResult(AppPojo appPojo) {
-        super(appPojo);
-        this.appPojo = appPojo;
+    AppResult(@NonNull AppPojo pojo) {
+        super(pojo);
 
-        className = new ComponentName(appPojo.packageName, appPojo.activityName);
+        className = new ComponentName(pojo.packageName, pojo.activityName);
     }
 
     @NonNull
@@ -73,13 +72,13 @@ public class AppResult extends Result {
 
         TextView appName = view.findViewById(R.id.item_app_name);
 
-        displayHighlighted(appPojo.normalizedName, appPojo.getName(), fuzzyScore, appName, context);
+        displayHighlighted(pojo.normalizedName, pojo.getName(), fuzzyScore, appName, context);
 
         TextView tagsView = view.findViewById(R.id.item_app_tag);
         // Hide tags view if tags are empty
-        if (appPojo.getTags().isEmpty()) {
+        if (pojo.getTags().isEmpty()) {
             tagsView.setVisibility(View.GONE);
-        } else if (displayHighlighted(appPojo.getNormalizedTags(), appPojo.getTags(),
+        } else if (displayHighlighted(pojo.getNormalizedTags(), pojo.getTags(),
                 fuzzyScore, tagsView, context) || prefs.getBoolean("tags-visible", true)) {
             tagsView.setVisibility(View.VISIBLE);
         } else {
@@ -104,15 +103,15 @@ public class AppResult extends Result {
             notificationView.setVisibility(notificationPrefs.contains(packageKey) ? View.VISIBLE : View.GONE);
             notificationView.setTag(packageKey);
 
-            int primaryColor = UIColors.getPrimaryColor(context);
-            notificationView.setColorFilter(primaryColor);
+            int dotColor = UIColors.getNotificationDotColor(context);
+            notificationView.setColorFilter(dotColor);
         }
 
         return view;
     }
 
     private String getPackageKey() {
-        return appPojo.getPackageKey();
+        return pojo.getPackageKey();
     }
 
     @Override
@@ -137,12 +136,12 @@ public class AppResult extends Result {
             ApplicationInfo ai;
             if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 LauncherApps launcher = (LauncherApps) context.getSystemService(Context.LAUNCHER_APPS_SERVICE);
-                LauncherActivityInfo info = launcher.getActivityList(this.appPojo.packageName, this.appPojo.userHandle.getRealHandle()).get(0);
+                LauncherActivityInfo info = launcher.getActivityList(this.pojo.packageName, this.pojo.userHandle.getRealHandle()).get(0);
                 ai = info.getApplicationInfo();
 
-                isSameProfile = this.appPojo.userHandle.isCurrentUser();
+                isSameProfile = this.pojo.userHandle.isCurrentUser();
             } else {
-                ai = context.getPackageManager().getApplicationInfo(this.appPojo.packageName, 0);
+                ai = context.getPackageManager().getApplicationInfo(this.pojo.packageName, 0);
             }
 
             // Need to AND the flags with SYSTEM:
@@ -163,71 +162,69 @@ public class AppResult extends Result {
 
     @Override
     protected boolean popupMenuClickHandler(final Context context, final RecordAdapter parent, int stringId, View parentView) {
-        switch (stringId) {
-            case R.string.menu_app_details:
-                launchAppDetails(context, appPojo);
-                return true;
-            case R.string.menu_app_store:
-                launchAppStore(context, appPojo);
-                return true;
-            case R.string.menu_app_uninstall:
-                launchUninstall(context, appPojo);
-                return true;
-            case R.string.menu_app_hibernate:
-                hibernate(context, appPojo);
-                return true;
-            case R.string.menu_exclude:
+        if (stringId == R.string.menu_app_details) {
+            launchAppDetails(context, pojo);
+            return true;
+        } else if (stringId == R.string.menu_app_store) {
+            launchAppStore(context, pojo);
+            return true;
+        } else if (stringId == R.string.menu_app_uninstall) {
+            launchUninstall(context, pojo);
+            return true;
+        } else if (stringId == R.string.menu_app_hibernate) {
+            hibernate(context, pojo);
+            return true;
+        } else if (stringId == R.string.menu_exclude) {
+            final int EXCLUDE_HISTORY_ID = 0;
+            final int EXCLUDE_KISS_ID = 1;
+            PopupMenu popupExcludeMenu = new PopupMenu(context, parentView);
+            //Adding menu items
+            popupExcludeMenu.getMenu().add(EXCLUDE_HISTORY_ID, Menu.NONE, Menu.NONE, R.string.menu_exclude_history);
+            popupExcludeMenu.getMenu().add(EXCLUDE_KISS_ID, Menu.NONE, Menu.NONE, R.string.menu_exclude_kiss);
+            //registering popup with OnMenuItemClickListener
+            popupExcludeMenu.setOnMenuItemClickListener(item -> {
+                switch (item.getGroupId()) {
+                    case EXCLUDE_HISTORY_ID:
+                        excludeFromHistory(context, pojo);
+                        return true;
+                    case EXCLUDE_KISS_ID:
+                        excludeFromKiss(context, pojo, parent);
+                        return true;
+                }
 
-                final int EXCLUDE_HISTORY_ID = 0;
-                final int EXCLUDE_KISS_ID = 1;
-                PopupMenu popupExcludeMenu = new PopupMenu(context, parentView);
-                //Adding menu items
-                popupExcludeMenu.getMenu().add(EXCLUDE_HISTORY_ID, Menu.NONE, Menu.NONE, R.string.menu_exclude_history);
-                popupExcludeMenu.getMenu().add(EXCLUDE_KISS_ID, Menu.NONE, Menu.NONE, R.string.menu_exclude_kiss);
-                //registering popup with OnMenuItemClickListener
-                popupExcludeMenu.setOnMenuItemClickListener(item -> {
-                    switch (item.getGroupId()) {
-                        case EXCLUDE_HISTORY_ID:
-                            excludeFromHistory(context, appPojo);
-                            return true;
-                        case EXCLUDE_KISS_ID:
-                            excludeFromKiss(context, appPojo, parent);
-                            return true;
-                    }
+                return true;
+            });
 
-                    return true;
-                });
-
-                popupExcludeMenu.show();
-                return true;
-            case R.string.menu_tags_edit:
-                launchEditTagsDialog(context, parent, appPojo);
-                return true;
-            case R.string.menu_app_rename:
-                launchRenameDialog(context, parent, appPojo);
-                return true;
-            case R.string.menu_custom_icon:
-                launchCustomIcon(context, parent);
-                return true;
+            popupExcludeMenu.show();
+            return true;
+        } else if (stringId == R.string.menu_tags_edit) {
+            launchEditTagsDialog(context, parent, pojo);
+            return true;
+        } else if (stringId == R.string.menu_app_rename) {
+            launchRenameDialog(context, parent, pojo);
+            return true;
+        } else if (stringId == R.string.menu_custom_icon) {
+            launchCustomIcon(context, parent);
+            return true;
         }
 
         return super.popupMenuClickHandler(context, parent, stringId, parentView);
     }
 
-    private void excludeFromHistory(Context context, AppPojo appPojo) {
+    private void excludeFromHistory(Context context, AppPojo pojo) {
         // add to excluded from history app list
-        KissApplication.getApplication(context).getDataHandler().addToExcludedFromHistory(appPojo);
+        KissApplication.getApplication(context).getDataHandler().addToExcludedFromHistory(pojo);
         // remove from history
         removeFromHistory(context);
         // inform user
         Toast.makeText(context, R.string.excluded_app_history_added, Toast.LENGTH_LONG).show();
     }
 
-    private void excludeFromKiss(Context context, AppPojo appPojo, final RecordAdapter parent) {
+    private void excludeFromKiss(Context context, AppPojo pojo, final RecordAdapter parent) {
         // remove item since it will be hidden
         parent.removeResult(context, AppResult.this);
 
-        KissApplication.getApplication(context).getDataHandler().addToExcluded(appPojo);
+        KissApplication.getApplication(context).getDataHandler().addToExcluded(pojo);
         // In case the newly excluded app was in a favorite, refresh them
         ((MainActivity) context).onFavoriteChange();
         Toast.makeText(context, R.string.excluded_app_list_added, Toast.LENGTH_LONG).show();
@@ -250,7 +247,7 @@ public class AppResult extends Result {
         builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
             dialog.dismiss();
             // Refresh tags for given app
-            app.setTags(tagInput.getText().toString().trim().toLowerCase(Locale.ROOT));
+            app.setTags(tagInput.getText().toString());
             KissApplication.getApplication(context).getDataHandler().getTagsHandler().setTags(app.id, app.getTags());
             // Show toast message
             String msg = context.getResources().getString(R.string.tags_confirmation_added);
@@ -331,7 +328,7 @@ public class AppResult extends Result {
                 KissApplication.getApplication(context).getDataHandler().removeRenameApp(getComponentName(), name);
 
                 // Show toast message
-                String msg = context.getResources().getString(R.string.app_rename_confirmation, appPojo.getName());
+                String msg = context.getResources().getString(R.string.app_rename_confirmation, pojo.getName());
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
             }
 
@@ -360,9 +357,9 @@ public class AppResult extends Result {
         {
             Bundle args = new Bundle();
             args.putString("className", className.flattenToString()); // will be converted back with ComponentName.unflattenFromString()
-            args.putParcelable("userHandle", appPojo.userHandle);
-            args.putString("componentName", appPojo.getComponentName());
-            args.putLong("customIcon", appPojo.getCustomIconId());
+            args.putParcelable("userHandle", pojo.userHandle);
+            args.putString("componentName", pojo.getComponentName());
+            args.putLong("customIcon", pojo.getCustomIconId());
             dialog.setArguments(args);
         }
 
@@ -384,7 +381,7 @@ public class AppResult extends Result {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             LauncherApps launcher = (LauncherApps) context.getSystemService(Context.LAUNCHER_APPS_SERVICE);
             assert launcher != null;
-            launcher.startAppDetailsActivity(className, appPojo.userHandle.getRealHandle(), null, null);
+            launcher.startAppDetailsActivity(className, pojo.userHandle.getRealHandle(), null, null);
         } else {
             Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                     Uri.fromParts("package", app.packageName, null));
@@ -395,17 +392,17 @@ public class AppResult extends Result {
     private void launchAppStore(Context context, AppPojo app) {
         try {
             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + app.packageName)));
-        } catch (android.content.ActivityNotFoundException anfe) {
+        } catch (ActivityNotFoundException anfe) {
             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + app.packageName)));
         }
     }
 
     private void hibernate(Context context, AppPojo app) {
         String msg = context.getResources().getString(R.string.toast_hibernate_completed);
-        if (!KissApplication.getApplication(context).getRootHandler().hibernateApp(appPojo.packageName)) {
+        if (!KissApplication.getApplication(context).getRootHandler().hibernateApp(pojo.packageName)) {
             msg = context.getResources().getString(R.string.toast_hibernate_error);
         } else {
-            KissApplication.getApplication(context).getDataHandler().getAppProvider().reload();
+            KissApplication.getApplication(context).getDataHandler().reloadApps();
         }
 
         Toast.makeText(context, String.format(msg, app.getName()), Toast.LENGTH_SHORT).show();
@@ -432,18 +429,22 @@ public class AppResult extends Result {
 
     @Override
     public Drawable getDrawable(Context context) {
-        synchronized (this) {
-            IconsHandler iconsHandler = KissApplication.getApplication(context).getIconsHandler();
-            icon = iconsHandler.getDrawableIconForPackage(className, this.appPojo.userHandle);
-            return icon;
+        if (!isDrawableCached()) {
+            synchronized (this) {
+                if (!isDrawableCached()) {
+                    IconsHandler iconsHandler = KissApplication.getApplication(context).getIconsHandler();
+                    icon = iconsHandler.getDrawableIconForPackage(className, this.pojo.userHandle);
+                }
+            }
         }
+        return icon;
     }
-
 
     @Override
     public boolean isDrawableDynamic() {
-        // The only dynamic icon is from Google Calendar
-        return GoogleCalendarIcon.GOOGLE_CALENDAR.equals(appPojo.packageName);
+        // drawable may change because of async loading, so return true as long as icon is not cached
+        // another dynamic icon is from Google Calendar
+        return !isDrawableCached() || GoogleCalendarIcon.GOOGLE_CALENDAR.equals(pojo.packageName);
     }
 
     @Override
@@ -472,7 +473,7 @@ public class AppResult extends Result {
                     }
                 }
 
-                launcher.startMainActivity(className, appPojo.userHandle.getRealHandle(), sourceBounds, opts);
+                launcher.startMainActivity(className, pojo.userHandle.getRealHandle(), sourceBounds, opts);
             } else {
                 Intent intent = new Intent(Intent.ACTION_MAIN);
                 intent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -486,6 +487,7 @@ public class AppResult extends Result {
                 context.startActivity(intent);
             }
         } catch (ActivityNotFoundException | NullPointerException | SecurityException e) {
+            Log.w(TAG, "Unable to launch activity", e);
             // Application was just removed?
             // (null pointer exception can be thrown on Lollipop+ when app is missing)
             Toast.makeText(context, R.string.application_not_found, Toast.LENGTH_LONG).show();
@@ -503,20 +505,20 @@ public class AppResult extends Result {
     }
 
     public void setCustomIcon(long dbId, Drawable drawable) {
-        appPojo.setCustomIconId(dbId);
+        pojo.setCustomIconId(dbId);
         setDrawableCache(drawable);
     }
 
     public void clearCustomIcon() {
-        appPojo.setCustomIconId(0);
+        pojo.setCustomIconId(0);
         setDrawableCache(null);
     }
 
     public long getCustomIcon() {
-        return appPojo.getCustomIconId();
+        return pojo.getCustomIconId();
     }
 
     public String getComponentName() {
-        return appPojo.getComponentName();
+        return pojo.getComponentName();
     }
 }

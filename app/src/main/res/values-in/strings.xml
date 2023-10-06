@@ -60,7 +60,7 @@
     <string name="settings_nfc">NFC</string>
     <string name="settings_tethering">Tethering</string>
     <string name="menu_wallpaper">Perbarui wallpaper…</string>
-    <string name="application_not_found">Ups... gagal menjalankan apl tersebut.</string>
+    <string name="application_not_found">Ups… gagal menjalankan apl tersebut.</string>
     <string name="history_erased">Riwayat dihapus.</string>
     <string name="favorites_erased">Favorit dihapus.</string>
     <string name="menu_favorites_add">Tambahkan ke favorit</string>
@@ -131,7 +131,7 @@
     <string name="wp_animate_center">Pusatkan wallpaper</string>
     <string name="reset_excluded_from_history_apps_name">Atur ulang daftar apl yang dikecualikan dari riwayat</string>
     <string name="reset_excluded_from_history_apps_warn">Apakah Anda benar-benar ingin mengatur ulang apl yang dikecualikan dari daftar riwayat\?</string>
-    <string name="settings_excluded_apps">Pengecualian apl</string>
+    <string name="settings_excluded_apps">Entri dikecualikan</string>
     <string name="ui_excluded_from_history_apps">Lihat atau sunting apl yang dikecualikan dari riwayat</string>
     <string name="contacts_call_on_click">Ketuk untuk memanggil kontak</string>
     <string name="keyboard_suggestions">Aktifkan autocomplete/saran</string>
@@ -215,7 +215,7 @@
     <string name="menu_size_up">Besarkan</string>
     <string name="menu_widget_move_up">Pindah ke atas</string>
     <string name="menu_widget_move_down">Pindah ke bawah</string>
-    <string name="enable_double_tap_to_lock">Untuk mengaktifkan dua-ketuk untuk mengunci, Anda harus memberi izin akses tambahan: aktifkan KISS pada layar berikut.</string>
+    <string name="enable_double_tap_to_lock">Ketuk dua kali untuk mengunci membutuhkan API Aksesibilitas Android. Tidak ada data yang diproses dan disimpan. Untuk menggunakan fitur ini, aktifkan KISS pada layar berikut.</string>
     <string name="gesture_up_name">Tindakan gesek ke atas</string>
     <string name="gesture_down_name">Tindakan gesek ke bawah</string>
     <string name="lock_service_description">Layar kunci dari Peluncur KISS</string>
@@ -223,7 +223,6 @@
     <string name="gestures">Gestur</string>
     <string name="show_subicons">Tampilkan ikon apl pada pintasan</string>
     <string name="theme_shadow">Garis luar teks (bayangan)</string>
-    <string name="small_results">Tampilkan hasil lebih kecil</string>
     <string name="gesture_history">Tampilkan riwayat</string>
     <string name="gesture_apps">Tampilkan daftar apl</string>
     <string name="gesture_notifications">Tampilkan bayangan notifikasi</string>
@@ -247,11 +246,7 @@
     <string name="theme_customize_disabled">Nonaktif</string>
     <string name="theme_customize_default">Default tema</string>
     <string name="theme_customisation">Kustomisasi tema lanjutan</string>
-    <string name="icons_pack_squircle_name">Persegi Membulat</string>
     <string name="hide_search_bar_hint">Buang teks petunjuk dari bilah pencarian</string>
-    <string name="icons_pack_teardrop_name">Butiran Air</string>
-    <string name="icons_pack_circle_name">Lingkaran</string>
-    <string name="icons_pack_square_name">Persegi</string>
     <string name="theme_wallpaper">Wallpaper</string>
     <string name="gesture_right_name">Tindakan geser ke kanan</string>
     <string name="gesture_left_name">Tindakan geser ke kiri</string>
@@ -317,4 +312,13 @@
     <string name="excluded_apps_toggle">Tampilkan apl yang disembunyikan di dalam pencarian</string>
     <string name="always_default_web_search_on_enter">Selalu picu penyedia pencarian web default saat masuk</string>
     <string name="results_size">Ukuran tampilan hasil</string>
+    <string name="large_result_list_margins">Renggang daftar lebih besar</string>
+    <string name="color_system">Warna Sistem</string>
+    <string name="icons_themed_name">Ikon bertema</string>
+    <string name="icons_themed_summary">Ikon diwarnai dengan warna sistem (beta)</string>
+    <string name="reset_excluded_app_shortcuts_name">Setel ulang daftar aplikasi yang dikecualikan dari menampilkan pintasan</string>
+    <string name="reset_excluded_app_shortcuts_warn">Apakah Anda benar-benar ingin mengatur ulang daftar aplikasi yang dikecualikan dari menampilkan pintasan\?</string>
+    <string name="ui_excluded_from_shortcuts_apps">Lihat atau edit aplikasi yang dikecualikan dari menampilkan pintasan</string>
+    <string name="search_provider_error_uri_cannot_be_handle">URI tidak dapat ditangani oleh aplikasi apa pun di perangkat Anda.</string>
+    <string name="menu_shortcut_pin">Pin pintasan</string>
 </resources>

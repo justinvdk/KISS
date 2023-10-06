@@ -10,7 +10,9 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -20,6 +22,7 @@ import android.widget.ImageView;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 
 import fr.neamar.kiss.KissApplication;
 import fr.neamar.kiss.MainActivity;
@@ -51,6 +54,7 @@ class ExperienceTweaks extends Forwarder {
      */
     private final static int INPUT_TYPE_WORKAROUND = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             | InputType.TYPE_TEXT_FLAG_AUTO_CORRECT;
+    private static final String TAG = ExperienceTweaks.class.getSimpleName();
 
     private View mainEmptyView;
     private final GestureDetector gd;
@@ -77,11 +81,10 @@ class ExperienceTweaks extends Forwarder {
             @Override
             public boolean onSingleTapUp(MotionEvent e) {
                 // Double tap disabled: display history directly
-                if(!prefs.getBoolean("double-tap", false)) {
+                if (!prefs.getBoolean("double-tap", false)) {
                     if (prefs.getBoolean("history-onclick", false)) {
                         doAction("single-tap", "display-history");
-                    }
-                    else if(isMinimalisticModeEnabledForFavorites()) {
+                    } else if (isMinimalisticModeEnabledForFavorites()) {
                         doAction("single-tap", "display-favorites");
                     }
                 }
@@ -91,11 +94,10 @@ class ExperienceTweaks extends Forwarder {
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
                 // Double tap enabled: wait to confirm this is indeed a single tap, not a double tap
-                if(prefs.getBoolean("double-tap", false)) {
+                if (prefs.getBoolean("double-tap", false)) {
                     if (prefs.getBoolean("history-onclick", false)) {
                         doAction("single-tap", "display-history");
-                    }
-                    else if(isMinimalisticModeEnabledForFavorites()) {
+                    } else if (isMinimalisticModeEnabledForFavorites()) {
                         doAction("single-tap", "display-favorites");
                     }
                 }
@@ -115,7 +117,7 @@ class ExperienceTweaks extends Forwarder {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
                     return super.onDoubleTap(e);
                 }
-                if(!prefs.getBoolean("double-tap", false)) {
+                if (!prefs.getBoolean("double-tap", false)) {
                     return super.onDoubleTap(e);
                 }
 
@@ -185,7 +187,7 @@ class ExperienceTweaks extends Forwarder {
                         if (isMinimalisticModeEnabled()) {
                             // and we're currently in minimalistic mode with no results,
                             // and we're not looking at the app list
-                            if (mainActivity.isViewingSearchResults() && mainActivity.searchEditText.getText().toString().isEmpty()) {
+                            if (mainActivity.isViewingSearchResults() && TextUtils.isEmpty(mainActivity.searchEditText.getText())) {
                                 if (mainActivity.list.getAdapter() == null || mainActivity.list.getAdapter().isEmpty()) {
                                     mainActivity.showHistory();
                                 }
@@ -216,8 +218,7 @@ class ExperienceTweaks extends Forwarder {
                         String launchId = prefs.getString(source + "-launch-id", "");
                         Pojo item = KissApplication.getApplication(mainActivity).getDataHandler().getItemById(launchId);
                         if (item != null) {
-                            // don't send null parent if (item instanceof ContactsPojo)
-                            Result result = Result.fromPojo(null, item);
+                            Result<?> result = Result.fromPojo(mainActivity, item);
                             result.fastLaunch(mainActivity, mainEmptyView);
                         }
                         break;
@@ -299,7 +300,6 @@ class ExperienceTweaks extends Forwarder {
     // Super hacky code to display notification drawer
     // Can (and will) break in any Android release.
     @SuppressLint("PrivateApi")
-    @SuppressWarnings("CatchAndPrintStackTrace")
     private void displayNotificationDrawer() {
         @SuppressLint("WrongConstant") Object sbservice = mainActivity.getSystemService("statusbar");
         Class<?> statusbarManager;
@@ -313,12 +313,11 @@ class ExperienceTweaks extends Forwarder {
             }
             showStatusBar.invoke(sbservice);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Unable to display notification drawer", e);
         }
     }
 
     @SuppressLint("PrivateApi")
-    @SuppressWarnings("CatchAndPrintStackTrace")
     private void displayQuickSettings() {
         try {
             @SuppressLint("WrongConstant") Object sbservice = mainActivity.getSystemService("statusbar");
@@ -326,7 +325,7 @@ class ExperienceTweaks extends Forwarder {
                     .getMethod("expandSettingsPanel")
                     .invoke(sbservice);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Unable to display quick settings", e);
         }
     }
 
@@ -344,7 +343,7 @@ class ExperienceTweaks extends Forwarder {
      * (same for flesky: https://github.com/Neamar/KISS/issues/1263)
      */
     private boolean isNonCompliantKeyboard() {
-        String currentKeyboard = Settings.Secure.getString(mainActivity.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD).toLowerCase();
+        String currentKeyboard = Settings.Secure.getString(mainActivity.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD).toLowerCase(Locale.ROOT);
         return currentKeyboard.contains("swiftkey") || currentKeyboard.contains("flesky");
     }
 

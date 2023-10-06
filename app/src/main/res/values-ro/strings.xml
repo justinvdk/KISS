@@ -188,7 +188,7 @@
     <string name="pref_hide_circle_desc">Butoanele vor funcționa în continuare, dar vor fi invizibile.</string>
     <string name="reset_excluded_from_history_apps_name">Curăță lista de aplicații excluse din istoric</string>
     <string name="reset_excluded_from_history_apps_warn">Chiar doriți curățarea listei de aplicații excluse din istoric\?</string>
-    <string name="settings_excluded_apps">Aplicații excluse</string>
+    <string name="settings_excluded_apps">Intrări excluse</string>
     <string name="ui_excluded_from_history_apps">Editare aplicații excluse din istoric</string>
     <string name="excluded_app_history_added">Aplicație exclusă din istoric. Anulează asta în setările KISS</string>
     <string name="menu_exclude_kiss">din KISS</string>
@@ -215,7 +215,7 @@
     <string name="menu_size_up">Mărește</string>
     <string name="menu_size_down">Reduceți</string>
     <string name="large_favorites_bar">Favorite mărite</string>
-    <string name="enable_double_tap_to_lock">Pentru a activa blocarea cu două atingeri, va trebui să acordați permisiuni suplimentare: activați KISS în ecranul următor.</string>
+    <string name="enable_double_tap_to_lock">Pentru a activa blocarea cu două atingeri este nevoie de acces la modulul de accesibilitate Android. Nu sunt prelucrate date, nu sunt stocate date. Pentru a utiliza această caracteristică, activați KISS în ecranul următor.</string>
     <string name="gesture_down_name">Acțiune la glisare în jos</string>
     <string name="gesture_up_name">Acțiune la glisare în sus</string>
     <string name="lock_service_description">Blocare ecran din lansatorul KISS</string>
@@ -225,7 +225,6 @@
     <string name="history_frecency">Recentele frecvente primele</string>
     <string name="history_frequency">Frecvent accesate primele</string>
     <string name="history_recency">Recent accesate primele</string>
-    <string name="small_results">Afișare rezultate mai mici</string>
     <string name="gesture_history">Arată istoric</string>
     <string name="gesture_apps">Arată lista de aplicații</string>
     <string name="gesture_notifications">Afișare notificări</string>
@@ -248,10 +247,6 @@
     <string name="theme_shadow">Contur text (umbră)</string>
     <string name="theme_customisation">Personalizare avansată a temei</string>
     <string name="hide_search_bar_hint">Elimină textul indiciu din bara de căutare</string>
-    <string name="icons_pack_teardrop_name">Lacrimă</string>
-    <string name="icons_pack_circle_name">Cerc</string>
-    <string name="icons_pack_square_name">Pătrat</string>
-    <string name="icons_pack_squircle_name">Pătrat rotunjit</string>
     <string name="theme_wallpaper">Fundal</string>
     <string name="gesture_right_name">Acțiune la glisare spre dreapta</string>
     <string name="gesture_left_name">Acțiune la glisare spre stânga</string>
@@ -317,4 +312,13 @@
     <string name="excluded_apps_toggle">Afișați aplicațiile excluse în căutare</string>
     <string name="always_default_web_search_on_enter">Declanșează mereu furnizorul de căutare implicit</string>
     <string name="results_size">Dimensiune rezultate</string>
+    <string name="large_result_list_margins">Margini de listă mai mari</string>
+    <string name="ui_excluded_from_shortcuts_apps">Vizualizați sau editați aplicațiile excluse de la afișarea comenzilor rapide</string>
+    <string name="reset_excluded_app_shortcuts_name">Resetați lista de aplicații excluse de la afișarea comenzilor rapide</string>
+    <string name="reset_excluded_app_shortcuts_warn">Chiar doriți să resetați lista de aplicații excluse de la afișarea comenzilor rapide\?</string>
+    <string name="icons_themed_name">Icoane tematizate</string>
+    <string name="color_system">Culori de sistem</string>
+    <string name="icons_themed_summary">Pictogramele sunt colorate cu culorile sistemului (beta)</string>
+    <string name="search_provider_error_uri_cannot_be_handle">Adresa furnizată nu poate fi gestionată de nicio aplicație de pe dispozitivul dumneavoastră.</string>
+    <string name="menu_shortcut_pin">Fixați comandă rapidă</string>
 </resources>

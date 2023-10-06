@@ -2,7 +2,9 @@ package fr.neamar.kiss;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.app.role.RoleManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -17,6 +19,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,7 +30,6 @@ import android.widget.Toolbar;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -38,6 +40,7 @@ import java.util.TreeSet;
 import fr.neamar.kiss.broadcast.IncomingCallHandler;
 import fr.neamar.kiss.dataprovider.simpleprovider.SearchProvider;
 import fr.neamar.kiss.dataprovider.simpleprovider.TagsProvider;
+import fr.neamar.kiss.forwarder.InterfaceTweaks;
 import fr.neamar.kiss.forwarder.TagsMenu;
 import fr.neamar.kiss.pojo.AppPojo;
 import fr.neamar.kiss.pojo.Pojo;
@@ -47,8 +50,10 @@ import fr.neamar.kiss.preference.ExcludePreferenceScreen;
 import fr.neamar.kiss.preference.PreferenceScreenHelper;
 import fr.neamar.kiss.preference.SwitchPreference;
 import fr.neamar.kiss.searcher.QuerySearcher;
-import fr.neamar.kiss.utils.PackageManagerUtils;
+import fr.neamar.kiss.utils.DrawableUtils;
 import fr.neamar.kiss.utils.Permission;
+import fr.neamar.kiss.utils.ShortcutUtil;
+import fr.neamar.kiss.utils.SystemUiVisibilityHelper;
 
 @SuppressWarnings("FragmentInjection")
 public class SettingsActivity extends PreferenceActivity implements
@@ -58,7 +63,7 @@ public class SettingsActivity extends PreferenceActivity implements
             + " pref-rounded-list pref-rounded-bars pref-swap-kiss-button-with-menu pref-hide-circle history-hide"
             + " enable-favorites-bar notification-bar-color black-notification-icons icons-pack theme-shadow"
             + " theme-separator theme-result-color large-favorites-bar pref-hide-search-bar-hint theme-wallpaper"
-            + " theme-bar-color results-size";
+            + " theme-bar-color results-size large-result-list-margins themed-icons";
     // Those settings require a restart of the settings
     final static private String settingsRequiringRestartForSettingsActivity = "theme force-portrait";
 
@@ -67,6 +72,7 @@ public class SettingsActivity extends PreferenceActivity implements
             "gesture-left", "gesture-right",
             "gesture-long-press"
     );
+    private static final String TAG = SettingsActivity.class.getSimpleName();
     private static Pair<CharSequence[], CharSequence[]> ItemToRunListContent = null;
 
     private boolean requireFullRestart = false;
@@ -74,6 +80,8 @@ public class SettingsActivity extends PreferenceActivity implements
     private SharedPreferences prefs;
 
     private Permission permissionManager;
+
+    private SystemUiVisibilityHelper systemUiVisibilityHelper;
 
     /**
      * Get tags that should be in the favorites bar
@@ -83,7 +91,7 @@ public class SettingsActivity extends PreferenceActivity implements
      */
     @NonNull
     private static Set<String> getFavTags(Context context) {
-        ArrayList<Pojo> favoritesPojo = KissApplication.getApplication(context).getDataHandler()
+        List<Pojo> favoritesPojo = KissApplication.getApplication(context).getDataHandler()
                 .getFavorites();
         Set<String> set = new HashSet<>();
         for (Pojo pojo : favoritesPojo) {
@@ -97,13 +105,9 @@ public class SettingsActivity extends PreferenceActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = prefs.getString("theme", "light");
-        if (theme.equals("amoled-dark")) {
-            setTheme(R.style.SettingThemeAmoledDark);
-        } else if (theme.contains("dark")) {
-            setTheme(R.style.SettingThemeDark);
-        }
+        InterfaceTweaks.applySettingsTheme(this, prefs);
 
+        systemUiVisibilityHelper = new SystemUiVisibilityHelper(this);
 
         // Lock launcher into portrait mode
         // Do it here to make the transition as smooth as possible
@@ -133,6 +137,14 @@ public class SettingsActivity extends PreferenceActivity implements
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
             removePreference("advanced", "enable-notifications");
         }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            removePreference("icons-section", DrawableUtils.KEY_THEMED_ICONS);
+        }
+        if (!ShortcutUtil.canDeviceShowShortcuts()) {
+            removePreference("exclude_apps_category", "reset-excluded-app-shortcuts");
+            removePreference("search-providers", "enable-shortcuts");
+            removePreference("search-providers", "reset");
+        }
 
         final ListPreference iconsPack = (ListPreference) findPreference("icons-pack");
         iconsPack.setEnabled(false);
@@ -151,8 +163,20 @@ public class SettingsActivity extends PreferenceActivity implements
 
         // This is reaaally slow, and always need to run asynchronously
         Runnable alwaysAsync = () -> {
+            // TODO: Note that there is a bug here with all of these settings pages:
+            //  These settings pages load the list of AppPojos from DataHandler only once.
+            //  This means that the data shown in these settings pages will be stale if the AppPojo
+            //  data stored in DataHandler is changed by elsewhere in the app.
+            //  You can easily reproduce this bug by:
+            //  1. Open the 'apps excluded from KISS' page
+            //  2. Change some values from their defaults
+            //  3. Go back and use the 'reset apps excluded from KISS' button
+            //  4. Open the 'apps excluded from KISS' page again. The data shown will be incorrect,
+            //   as it won't have refreshed for the user having reset the list.
+            //   This list will refresh if the user closes and re-opens KISS settings.
             SettingsActivity.this.addExcludedAppSettings();
             SettingsActivity.this.addExcludedFromHistoryAppSettings();
+            SettingsActivity.this.addExcludedShortcutAppSettings();
         };
 
         reorderPreferencesWithDisplayDependency();
@@ -298,24 +322,34 @@ public class SettingsActivity extends PreferenceActivity implements
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         super.onPreferenceTreeClick(preferenceScreen, preference);
         // If the user has clicked on a preference screen, set up the action bar
-        if (preference instanceof PreferenceScreen && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (preference instanceof PreferenceScreen) {
             final Dialog dialog = ((PreferenceScreen) preference).getDialog();
-            Toolbar toolbar = PreferenceScreenHelper.findToolbar((PreferenceScreen) preference);
+            UIColors.updateThemePrimaryColor(preference.getContext(), dialog);
+            if (systemUiVisibilityHelper != null) {
+                systemUiVisibilityHelper.copyVisibility(dialog.getWindow().getDecorView());
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Toolbar toolbar = PreferenceScreenHelper.findToolbar((PreferenceScreen) preference);
 
-            if (toolbar != null) {
-                toolbar.setNavigationOnClickListener(v -> {
-                    dialog.dismiss();
-                });
+                if (toolbar != null) {
+                    toolbar.setNavigationOnClickListener(v -> {
+                        dialog.dismiss();
+                    });
+                }
             }
         }
 
         return false;
     }
 
-    private void removePreference(String parent, String category) {
-        PreferenceGroup p = (PreferenceGroup) findPreference(parent);
-        Preference c = findPreference(category);
-        p.removePreference(c);
+    private void removePreference(String parentKey, String key) {
+        PreferenceGroup p = (PreferenceGroup) findPreference(parentKey);
+        Preference c = p.findPreference(key);
+        if (c != null) {
+            p.removePreference(c);
+        } else {
+            Log.d(TAG, "Preference to remove not found: " + parentKey + "/" + key);
+        }
     }
 
     private PreferenceGroup getParent(Preference preference) {
@@ -396,6 +430,40 @@ public class SettingsActivity extends PreferenceActivity implements
         category.addPreference(excludedAppsScreen);
     }
 
+    private void addExcludedShortcutAppSettings() {
+        if (!ShortcutUtil.canDeviceShowShortcuts()) {
+            return;
+        }
+
+        final DataHandler dataHandler = KissApplication.getApplication(this).getDataHandler();
+
+        PreferenceScreen excludedAppsScreen = ExcludePreferenceScreen.getInstance(
+                this,
+                new ExcludePreferenceScreen.IsExcludedCallback() {
+                    @Override
+                    public boolean isExcluded(@NonNull AppPojo app) {
+                        return app.isExcludedShortcuts();
+                    }
+                },
+                new ExcludePreferenceScreen.OnExcludedListener() {
+                    @Override
+                    public void onExcluded(final @NonNull AppPojo app) {
+                        dataHandler.addToExcludedShortcutApps(app);
+                    }
+
+                    @Override
+                    public void onIncluded(final @NonNull AppPojo app) {
+                        dataHandler.removeFromExcludedShortcutApps(app);
+                    }
+                },
+                R.string.ui_excluded_from_shortcuts_apps,
+                R.string.ui_excluded_apps_dialog_title
+        );
+
+        PreferenceGroup category = (PreferenceGroup) findPreference("exclude_apps_category");
+        category.addPreference(excludedAppsScreen);
+    }
+
     private void addCustomSearchProvidersPreferences(SharedPreferences prefs) {
         if (prefs.getStringSet("selected-search-provider-names", null) == null) {
             // If null, it means this setting has never been accessed before
@@ -415,27 +483,15 @@ public class SettingsActivity extends PreferenceActivity implements
     }
 
     private void removeSearchProviderSelect() {
-        PreferenceGroup category = (PreferenceGroup) findPreference("web-providers");
-        Preference pref = findPreference("selected-search-provider-names");
-        if (pref != null) {
-            category.removePreference(pref);
-        }
+        removePreference("web-providers", "selected-search-provider-names");
     }
 
     private void removeSearchProviderDelete() {
-        PreferenceGroup category = (PreferenceGroup) findPreference("web-providers");
-        Preference pref = findPreference("deleting-search-providers-names");
-        if (pref != null) {
-            category.removePreference(pref);
-        }
+        removePreference("web-providers", "deleting-search-providers-names");
     }
 
     private void removeSearchProviderDefault() {
-        PreferenceGroup category = (PreferenceGroup) findPreference("web-providers");
-        Preference pref = findPreference("default-search-provider");
-        if (pref != null) {
-            category.removePreference(pref);
-        }
+        removePreference("web-providers", "default-search-provider");
     }
 
     @SuppressWarnings("StringSplitter")
@@ -510,10 +566,7 @@ public class SettingsActivity extends PreferenceActivity implements
                 }
 
                 // Reload search list
-                final SearchProvider provider = KissApplication.getApplication(SettingsActivity.this).getDataHandler().getSearchProvider();
-                if (provider != null) {
-                    provider.reload();
-                }
+                KissApplication.getApplication(SettingsActivity.this).getDataHandler().reloadSearchProvider();
                 return true;
             }
         });
@@ -564,10 +617,7 @@ public class SettingsActivity extends PreferenceActivity implements
         if (key.equalsIgnoreCase("available-search-providers")) {
             addCustomSearchProvidersPreferences(prefs);
         } else if (key.equalsIgnoreCase("selected-search-provider-names")) {
-            final SearchProvider provider = KissApplication.getApplication(SettingsActivity.this).getDataHandler().getSearchProvider();
-            if (provider != null) {
-                provider.reload();
-            }
+            KissApplication.getApplication(SettingsActivity.this).getDataHandler().reloadSearchProvider();
             removeSearchProviderDefault(); // in order to refresh default search engine choices
             addDefaultSearchProvider(prefs);
         } else if (key.equalsIgnoreCase("enable-phone-history")) {
@@ -576,7 +626,7 @@ public class SettingsActivity extends PreferenceActivity implements
                 Permission.askPermission(Permission.PERMISSION_READ_PHONE_STATE, new Permission.PermissionResultListener() {
                     @Override
                     public void onGranted() {
-                        PackageManagerUtils.enableComponent(SettingsActivity.this, IncomingCallHandler.class, true);
+                        setPhoneHistoryEnabled(true);
                     }
 
                     @Override
@@ -588,29 +638,26 @@ public class SettingsActivity extends PreferenceActivity implements
                     }
                 });
             } else {
-                PackageManagerUtils.enableComponent(this, IncomingCallHandler.class, enabled);
+                setPhoneHistoryEnabled(enabled);
             }
         } else if (key.equalsIgnoreCase("primary-color")) {
-            UIColors.clearPrimaryColorCache(this);
+            UIColors.clearPrimaryColorCache();
         } else if (key.equalsIgnoreCase("number-of-display-elements")) {
             QuerySearcher.clearMaxResultCountCache();
         } else if (key.equalsIgnoreCase("default-search-provider")) {
-            final SearchProvider provider = KissApplication.getApplication(SettingsActivity.this).getDataHandler().getSearchProvider();
-            if (provider != null) {
-                provider.reload();
-            }
+            KissApplication.getApplication(SettingsActivity.this).getDataHandler().reloadSearchProvider();
         } else if ("pref-fav-tags-list".equals(key)) {
             // after we edit the fav tags list update DataHandler
             Set<String> favTags = sharedPreferences.getStringSet(key, Collections.<String>emptySet());
             DataHandler dh = KissApplication.getApplication(this).getDataHandler();
-            ArrayList<Pojo> favoritesPojo = dh.getFavorites();
+            List<Pojo> favoritesPojo = dh.getFavorites();
             for (Pojo pojo : favoritesPojo)
                 if (pojo instanceof TagDummyPojo && !favTags.contains(pojo.getName()))
                     dh.removeFromFavorites(pojo.id);
             for (String tagName : favTags)
                 dh.addToFavorites(TagsProvider.generateUniqueId(tagName));
         } else if ("exclude-favorites-apps".equals(key)) {
-            KissApplication.getApplication(this).getDataHandler().getAppProvider().reload();
+            KissApplication.getApplication(this).getDataHandler().reloadApps();
         }
 
         if (settingsRequiringRestart.contains(key) || settingsRequiringRestartForSettingsActivity.contains(key)) {
@@ -620,6 +667,15 @@ public class SettingsActivity extends PreferenceActivity implements
                 // Kill this activity too, and restart
                 recreate();
             }
+        }
+    }
+
+    private void setPhoneHistoryEnabled(boolean enabled) {
+        IncomingCallHandler.setEnabled(this, enabled);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && enabled) {
+            RoleManager roleManager = (RoleManager) getSystemService(ROLE_SERVICE);
+            Intent intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING);
+            startActivityForResult(intent, 1);
         }
     }
 
@@ -738,4 +794,29 @@ public class SettingsActivity extends PreferenceActivity implements
             selectListPreference.setTitle(R.string.pref_fav_tags_select);
         });
     }
+
+    /**
+     * Override to catch an exception which can crash whole app.
+     * This exception can occure when entries are added to/removed from preferences dynamically.
+     *
+     * @param key The key of the preference to retrieve.
+     * @return The {@link Preference} with the key, or null.
+     * @see PreferenceActivity#findPreference(CharSequence)
+     */
+    @Override
+    public Preference findPreference(CharSequence key) {
+        try {
+            return super.findPreference(key);
+        } catch (IndexOutOfBoundsException e) {
+            Log.e(TAG, "Unable to find preference for key:" + key);
+            return null;
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        systemUiVisibilityHelper.onWindowFocusChanged(hasFocus);
+    }
+
 }

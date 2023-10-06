@@ -36,12 +36,12 @@ import fr.neamar.kiss.utils.FuzzyScore;
 import fr.neamar.kiss.utils.PackageManagerUtils;
 import fr.neamar.kiss.utils.UserHandle;
 
-public class SearchResult extends Result {
-    private final SearchPojo searchPojo;
+public class SearchResult extends Result<SearchPojo> {
 
-    SearchResult(SearchPojo searchPojo) {
-        super(searchPojo);
-        this.searchPojo = searchPojo;
+    private static final String TAG = SearchResult.class.getSimpleName();
+
+    SearchResult(@NonNull SearchPojo pojo) {
+        super(pojo);
     }
 
     @NonNull
@@ -57,54 +57,62 @@ public class SearchResult extends Result {
         int pos;
         int len;
 
-        if (searchPojo.type == SearchPojo.Type.URL) {
+        if (pojo.type == SearchPojo.Type.URL) {
             text = String.format(context.getString(R.string.ui_item_visit), this.pojo.getName());
             pos = text.indexOf(this.pojo.getName());
             len = this.pojo.getName().length();
             image.setImageResource(R.drawable.ic_public);
-        } else if (searchPojo.type == SearchPojo.Type.SEARCH) {
-            text = String.format(context.getString(R.string.ui_item_search), this.pojo.getName(), searchPojo.query);
-            pos = text.indexOf(searchPojo.query);
-            len = searchPojo.query.length();
+        } else if (pojo.type == SearchPojo.Type.SEARCH) {
+            text = String.format(context.getString(R.string.ui_item_search), this.pojo.getName(), pojo.query);
+            pos = text.indexOf(pojo.query);
+            len = pojo.query.length();
             image.setImageResource(R.drawable.search);
 
             boolean hideIcons = getHideIcons(context);
-            if (isGoogleSearch() && !hideIcons) {
-                Drawable icon = getIconByPackageName(context, "com.google.android.googlequicksearchbox");
-                if (icon != null) {
-                    image.setImageDrawable(icon);
-                    hasCustomIcon = true;
+            if (!hideIcons) {
+                if (isGoogleSearch()) {
+                    Drawable icon = getIconByPackageName(context, "com.google.android.googlequicksearchbox");
+                    if (icon != null) {
+                        image.setImageDrawable(icon);
+                        hasCustomIcon = true;
+                    }
+                } else if (isDuckDuckGo()) {
+                    Drawable icon = getIconByPackageName(context, "com.duckduckgo.mobile.android");
+                    if (icon != null) {
+                        image.setImageDrawable(icon);
+                        hasCustomIcon = true;
+                    }
+                }
+                if (!hasCustomIcon) {
+                    Intent intent = createSearchQueryIntent();
+                    Drawable icon = getIconByIntent(context, intent);
+                    if (icon != null) {
+                        image.setImageDrawable(icon);
+                        hasCustomIcon = true;
+                    }
                 }
             }
-
-            if (isDuckDuckGo() && !hideIcons) {
-                Drawable icon = getIconByPackageName(context, "com.duckduckgo.mobile.android");
-                if (icon != null) {
-                    image.setImageDrawable(icon);
-                    hasCustomIcon = true;
-                }
-            }
-        } else if (searchPojo.type == SearchPojo.Type.CALCULATOR) {
-            text = searchPojo.query;
+        } else if (pojo.type == SearchPojo.Type.CALCULATOR) {
+            text = pojo.query;
             pos = text.indexOf("=");
             len = text.length() - pos;
             image.setImageResource(R.drawable.ic_functions);
-        } else if (searchPojo.type == SearchPojo.Type.URI) {
-            text = String.format(context.getString(R.string.ui_item_open), this.searchPojo.query);
-            pos = text.indexOf(searchPojo.query);
-            len = searchPojo.query.length();
+        } else if (pojo.type == SearchPojo.Type.URI) {
+            text = String.format(context.getString(R.string.ui_item_open), this.pojo.query);
+            pos = text.indexOf(pojo.query);
+            len = pojo.query.length();
             image.setImageResource(R.drawable.ic_public);
 
             if (!getHideIcons(context)) {
-                Intent intent = createUriIntent();
+                Intent intent = createUriQueryIntent();
                 Drawable icon = getIconByIntent(context, intent);
                 if (icon != null) {
                     image.setImageDrawable(icon);
                     hasCustomIcon = true;
                 }
             }
-        } else if (searchPojo.type == SearchPojo.Type.IP) {
-            text = searchPojo.query;
+        } else if (pojo.type == SearchPojo.Type.IP) {
+            text = pojo.query;
             pos = text.indexOf(": ") + 2;
             len = text.length() - pos;
             image.setImageResource(R.drawable.ic_netif);
@@ -123,12 +131,29 @@ public class SearchResult extends Result {
     }
 
     /**
-     * Creates intent to start activity with given uri.
+     * Creates intent to start activity for given uri query.
      *
      * @return intent
      */
-    private Intent createUriIntent() {
-        Uri uri = Uri.parse(searchPojo.query);
+    private Intent createUriQueryIntent() {
+        Uri uri = Uri.parse(pojo.query);
+        return PackageManagerUtils.createUriIntent(uri);
+    }
+
+    /**
+     * Creates intent to start activity for given search query.
+     *
+     * @return intent
+     */
+    private Intent createSearchQueryIntent() {
+        String query;
+        try {
+            query = URLEncoder.encode(pojo.query, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            query = URLEncoder.encode(pojo.query);
+        }
+        String urlWithQuery = pojo.url.replaceAll("%s|\\{q\\}", query);
+        Uri uri = Uri.parse(urlWithQuery);
         return PackageManagerUtils.createUriIntent(uri);
     }
 
@@ -167,50 +192,41 @@ public class SearchResult extends Result {
 
     @Override
     public void doLaunch(Context context, View v) {
-        switch (searchPojo.type) {
+        switch (pojo.type) {
             case URL:
             case SEARCH:
                 if (isGoogleSearch()) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.putExtra(SearchManager.QUERY, searchPojo.query); // query contains search string
+                        intent.putExtra(SearchManager.QUERY, pojo.query); // query contains search string
                         context.startActivity(intent);
                         break;
                     } catch (ActivityNotFoundException e) {
                         // Google app not found, fall back to default method
                     }
                 }
-                String query;
-                try {
-                    query = URLEncoder.encode(searchPojo.query, "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    query = URLEncoder.encode(searchPojo.query);
-                }
-                String urlWithQuery = searchPojo.url.replaceAll("%s|\\{q\\}", query);
-                Uri uri = Uri.parse(urlWithQuery);
-                Intent search = new Intent(Intent.ACTION_VIEW, uri);
-                search.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                Intent search = createSearchQueryIntent();
                 try {
                     context.startActivity(search);
-                } catch (android.content.ActivityNotFoundException e) {
-                    Log.w("SearchResult", "Unable to run search for url: " + searchPojo.url);
+                } catch (ActivityNotFoundException e) {
+                    Log.w(TAG, "Unable to run search for url: " + pojo.url);
                 }
                 break;
             case CALCULATOR:
-                ClipboardUtils.setClipboard(context, searchPojo.query.substring(searchPojo.query.indexOf("=") + 2));
+                ClipboardUtils.setClipboard(context, pojo.query.substring(pojo.query.indexOf("=") + 2));
                 Toast.makeText(context, R.string.copy_confirmation, Toast.LENGTH_SHORT).show();
                 break;
             case URI:
-                Intent intent = createUriIntent();
+                Intent intent = createUriQueryIntent();
                 try {
                     context.startActivity(intent);
-                } catch (android.content.ActivityNotFoundException e) {
-                    Log.w("SearchResult", "Unable to run search for uri: " + searchPojo.url);
+                } catch (ActivityNotFoundException e) {
+                    Log.w(TAG, "Unable to run search for uri: " + pojo.url);
                 }
                 break;
             case IP:
-                ClipboardUtils.setClipboard(context, searchPojo.query.substring(searchPojo.query.indexOf(": ") + 2));
+                ClipboardUtils.setClipboard(context, pojo.query.substring(pojo.query.indexOf(": ") + 2));
                 Toast.makeText(context, R.string.copy_confirmation, Toast.LENGTH_SHORT).show();
                 break;
         }
@@ -225,25 +241,24 @@ public class SearchResult extends Result {
 
     @Override
     protected boolean popupMenuClickHandler(Context context, RecordAdapter parent, int stringId, View parentView) {
-        switch (stringId) {
-            case R.string.share:
-                Intent shareIntent = new Intent();
-                shareIntent.setAction(Intent.ACTION_SEND);
-                shareIntent.putExtra(Intent.EXTRA_TEXT, searchPojo.query);
-                shareIntent.setType("text/plain");
-                shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(shareIntent);
-                return true;
+        if (stringId == R.string.share) {
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, pojo.query);
+            shareIntent.setType("text/plain");
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(shareIntent);
+            return true;
         }
 
         return super.popupMenuClickHandler(context, parent, stringId, parentView);
     }
 
     private boolean isGoogleSearch() {
-        return searchPojo.url.startsWith("https://encrypted.google.com");
+        return pojo.url.startsWith("https://encrypted.google.com");
     }
 
     private boolean isDuckDuckGo() {
-        return searchPojo.url.startsWith("https://start.duckduckgo.com");
+        return pojo.url.startsWith("https://start.duckduckgo.com");
     }
 }

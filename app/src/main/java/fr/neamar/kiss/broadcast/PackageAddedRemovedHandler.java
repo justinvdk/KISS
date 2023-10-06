@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.preference.PreferenceManager;
 
 import fr.neamar.kiss.KissApplication;
-import fr.neamar.kiss.dataprovider.AppProvider;
 import fr.neamar.kiss.utils.UserHandle;
 
 /**
@@ -20,40 +19,36 @@ import fr.neamar.kiss.utils.UserHandle;
 public class PackageAddedRemovedHandler extends BroadcastReceiver {
 
     public static void handleEvent(Context ctx, String action, String packageName, UserHandle user, boolean replacing) {
-        if (PreferenceManager.getDefaultSharedPreferences(ctx).getBoolean("enable-app-history", true)) {
-            // Insert into history new packages (not updated ones)
-            if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-                if (replacing) {
-                    // Update shortcuts
-                    KissApplication.getApplication(ctx).getDataHandler().updateShortcuts(packageName);
-                } else {
+        if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
+            if (!replacing) {
+                Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
+                // launchIntent can be null for some plugin app
+                if (launchIntent != null) {
                     // Add new package to history
-                    Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
-                    if (launchIntent == null) {//for some plugin app
-                        return;
+                    if (PreferenceManager.getDefaultSharedPreferences(ctx).getBoolean("enable-app-history", true)) {
+                        String className = launchIntent.getComponent().getClassName();
+                        String pojoID = user.addUserSuffixToString("app://" + packageName + "/" + className, '/');
+                        KissApplication.getApplication(ctx).getDataHandler().addToHistory(pojoID);
                     }
-
-                    String className = launchIntent.getComponent().getClassName();
-                    String pojoID = user.addUserSuffixToString("app://" + packageName + "/" + className, '/');
-                    KissApplication.getApplication(ctx).getDataHandler().addToHistory(pojoID);
-                    // Add shortcuts
-                    KissApplication.getApplication(ctx).getDataHandler().updateAllShortcuts(packageName);
                 }
             }
         }
 
-        if (Intent.ACTION_PACKAGE_REMOVED.equals(action) && !replacing) {
-            // Remove all installed shortcuts
-            KissApplication.getApplication(ctx).getDataHandler().removeShortcuts(packageName);
-            KissApplication.getApplication(ctx).getDataHandler().removeFromExcluded(packageName);
-        }
-
         KissApplication.getApplication(ctx).resetIconsHandler();
 
-        // Reload application list
-        final AppProvider provider = KissApplication.getApplication(ctx).getDataHandler().getAppProvider();
-        if (provider != null) {
-            provider.reload();
+        if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
+            if (!replacing) {
+                // Reload application list
+                KissApplication.getApplication(ctx).getDataHandler().reloadApps();
+                // Remove all installed shortcuts
+                KissApplication.getApplication(ctx).getDataHandler().removeShortcuts(packageName);
+                KissApplication.getApplication(ctx).getDataHandler().removeFromExcluded(packageName);
+            }
+        } else {
+            // Reload application list
+            KissApplication.getApplication(ctx).getDataHandler().reloadApps();
+            // Reload shortcuts
+            KissApplication.getApplication(ctx).getDataHandler().reloadShortcuts();
         }
     }
 

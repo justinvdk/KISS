@@ -176,7 +176,7 @@
     <string name="show_history">显示历史</string>
     <string name="reset_excluded_from_history_apps_name">重置排除在历史外的APP列表</string>
     <string name="reset_excluded_from_history_apps_warn">确定重置您的历史应用列表的排除吗？</string>
-    <string name="settings_excluded_apps">排除的应用</string>
+    <string name="settings_excluded_apps">排除的项目</string>
     <string name="ui_excluded_from_history_apps">查看或编辑从历史中排除的APP</string>
     <string name="wp_animate_center">壁纸居中</string>
     <string name="wp_animate_center_desc">壁纸在滚动后将返回中心</string>
@@ -216,13 +216,12 @@
     <string name="menu_size_down">减小</string>
     <string name="large_favorites_bar">使用更大的收藏栏</string>
     <string name="double_tap_to_lock">点按两次锁定屏幕</string>
-    <string name="enable_double_tap_to_lock">要启用双击锁屏，您需要授予额外权限：在接下去屏幕中启用KISS.</string>
+    <string name="enable_double_tap_to_lock">双击锁定需要 Android Accessibility API。 不处理任何数据，也不存储任何数据。 要使用此功能，请在以下屏幕中启用 KISS。</string>
     <string name="gesture_down_name">下滑操作</string>
     <string name="gesture_up_name">上滑操作</string>
     <string name="lock_service_description">从KISS启动器锁屏</string>
     <string name="gestures">手势</string>
     <string name="show_subicons">在快捷方式上显示应用图标</string>
-    <string name="small_results">显示较小的结果</string>
     <string name="gesture_history">显示历史</string>
     <string name="gesture_apps">显示应用列表</string>
     <string name="gesture_notifications">显示通知阴影</string>
@@ -248,10 +247,6 @@
     <string name="theme_shadow">文本轮廓(阴影)</string>
     <string name="theme_customisation">高级主题自定义</string>
     <string name="hide_search_bar_hint">从搜索栏中删除提示文字</string>
-    <string name="icons_pack_teardrop_name">泪滴形</string>
-    <string name="icons_pack_circle_name">圆形</string>
-    <string name="icons_pack_square_name">方形</string>
-    <string name="icons_pack_squircle_name">方圆形</string>
     <string name="theme_wallpaper">壁纸</string>
     <string name="gesture_right_name">右滑操作</string>
     <string name="gesture_left_name">左滑操作</string>
@@ -317,4 +312,13 @@
     <string name="excluded_apps_toggle">在搜索中显示已排除的应用</string>
     <string name="always_default_web_search_on_enter">始终在输入时触发默认网络搜索提供程序</string>
     <string name="results_size">结果展示尺寸</string>
+    <string name="large_result_list_margins">更大的列表边距</string>
+    <string name="reset_excluded_app_shortcuts_name">重置不显示快捷方式的应用的列表</string>
+    <string name="ui_excluded_from_shortcuts_apps">查看或编辑不显示快捷方式的应用</string>
+    <string name="reset_excluded_app_shortcuts_warn">你的确要重置不显示快捷方式的应用的列表吗？</string>
+    <string name="color_system">系统颜色</string>
+    <string name="icons_themed_name">主题图标</string>
+    <string name="icons_themed_summary">用系统颜色对图标进行着色（测试）</string>
+    <string name="menu_shortcut_pin">固定快捷方式</string>
+    <string name="search_provider_error_uri_cannot_be_handle">提供的 URI 无法被你设备上的任何应用所处理。</string>
 </resources>

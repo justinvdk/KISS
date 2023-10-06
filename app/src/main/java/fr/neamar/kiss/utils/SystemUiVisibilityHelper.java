@@ -1,5 +1,6 @@
 package fr.neamar.kiss.utils;
 
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
@@ -8,10 +9,9 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 
-import fr.neamar.kiss.MainActivity;
-
 public class SystemUiVisibilityHelper implements View.OnSystemUiVisibilityChangeListener {
-    private final MainActivity mMainActivity;
+    private static final String TAG = SystemUiVisibilityHelper.class.getSimpleName();
+    private final Activity mActivity;
     private final Handler mHandler;
     private final SharedPreferences prefs;
     private boolean mKeyboardVisible;
@@ -26,11 +26,11 @@ public class SystemUiVisibilityHelper implements View.OnSystemUiVisibilityChange
             applySystemUi();
     }
 
-    public SystemUiVisibilityHelper(MainActivity activity) {
-        mMainActivity = activity;
+    public SystemUiVisibilityHelper(Activity activity) {
+        mActivity = activity;
         mHandler = new Handler(Looper.getMainLooper());
         prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-        View decorView = mMainActivity.getWindow()
+        View decorView = mActivity.getWindow()
                 .getDecorView();
         decorView.setOnSystemUiVisibilityChangeListener(this);
         mKeyboardVisible = false;
@@ -51,17 +51,17 @@ public class SystemUiVisibilityHelper implements View.OnSystemUiVisibilityChange
         mKeyboardVisible = isVisible;
         if (isVisible) {
             mHandler.removeCallbacks(autoApplySystemUiRunnable);
-            applySystemUi(false, false);
+            applySystemUi(false, false, hasBlackNotificationIcons());
         } else {
             autoApplySystemUiRunnable.run();
         }
     }
 
     private void applySystemUi() {
-        applySystemUi(isPreferenceHideNavBar(), isPreferenceHideStatusBar());
+        applySystemUi(isPreferenceHideNavBar(), isPreferenceHideStatusBar(), hasBlackNotificationIcons());
     }
 
-    private void applySystemUi(boolean hideNavBar, boolean hideStatusBar) {
+    private void applySystemUi(boolean hideNavBar, boolean hideStatusBar, boolean hasBlackNotificationIcons) {
         int visibility = 0;
         if (hideNavBar) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -85,7 +85,13 @@ public class SystemUiVisibilityHelper implements View.OnSystemUiVisibilityChange
                         | View.SYSTEM_UI_FLAG_IMMERSIVE;
             }
         }
-        View decorView = mMainActivity.getWindow()
+        if (hasBlackNotificationIcons) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                visibility = visibility | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            }
+        }
+
+        View decorView = mActivity.getWindow()
                 .getDecorView();
         decorView.setSystemUiVisibility(visibility);
     }
@@ -111,6 +117,10 @@ public class SystemUiVisibilityHelper implements View.OnSystemUiVisibilityChange
         return prefs.getBoolean("pref-hide-statusbar", false);
     }
 
+    private boolean hasBlackNotificationIcons() {
+        return prefs.getBoolean("black-notification-icons", false);
+    }
+
     @Override
     public void onSystemUiVisibilityChange(int visibility) {
         StringBuilder sb = new StringBuilder();
@@ -129,7 +139,10 @@ public class SystemUiVisibilityHelper implements View.OnSystemUiVisibilityChange
         if ((visibility & View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY) != 0)
             sb.append("\n SYSTEM_UI_FLAG_IMMERSIVE_STICKY");
 
-        Log.d("TBog", sb.toString());
+        if ((visibility & View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR) != 0)
+            sb.append("\n SYSTEM_UI_FLAG_LIGHT_STATUS_BAR");
+
+        Log.d(TAG, sb.toString());
 
         if ((visibility & View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) != 0) {
             applySystemUi();
@@ -141,7 +154,7 @@ public class SystemUiVisibilityHelper implements View.OnSystemUiVisibilityChange
     }
 
     public void copyVisibility(View contentView) {
-        View decorView = mMainActivity.getWindow()
+        View decorView = mActivity.getWindow()
                 .getDecorView();
         int visibility = decorView.getSystemUiVisibility();
         contentView.setSystemUiVisibility(visibility);
@@ -150,14 +163,14 @@ public class SystemUiVisibilityHelper implements View.OnSystemUiVisibilityChange
     public void addPopup() {
         mPopupCount += 1;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            applySystemUi(false, false);
+            applySystemUi(false, false, false);
         }
     }
 
     public void popPopup() {
         mPopupCount -= 1;
         if (mPopupCount < 0) {
-            Log.e("TBog", "popup count negative!");
+            Log.e(TAG, "Popup count negative!");
             mPopupCount = 0;
         }
     }

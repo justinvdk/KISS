@@ -10,11 +10,10 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import fr.neamar.kiss.normalizer.PhoneNormalizer;
-import fr.neamar.kiss.normalizer.StringNormalizer;
 import fr.neamar.kiss.pojo.ContactsPojo;
 import fr.neamar.kiss.utils.Permission;
 
@@ -25,10 +24,10 @@ public class LoadContactsPojos extends LoadPojos<ContactsPojo> {
     }
 
     @Override
-    protected ArrayList<ContactsPojo> doInBackground(Void... params) {
-        long start = System.nanoTime();
+    protected List<ContactsPojo> doInBackground(Void... params) {
+        long start = System.currentTimeMillis();
 
-        ArrayList<ContactsPojo> contacts = new ArrayList<>();
+        List<ContactsPojo> contacts = new ArrayList<>();
         Context c = context.get();
         if (c == null) {
             return contacts;
@@ -63,7 +62,7 @@ public class LoadContactsPojos extends LoadPojos<ContactsPojo> {
                 int photoIdIndex = cur.getColumnIndex(ContactsContract.Contacts.PHOTO_ID);
                 int contactIdIndex = cur.getColumnIndex(ContactsContract.Contacts._ID);
 
-                while (cur.moveToNext()) {
+                while (cur.moveToNext() && !isCancelled()) {
                     String lookupKey = cur.getString(lookupIndex);
                     String name = cur.getString(displayNameIndex);
                     int contactId = cur.getInt(contactIdIndex);
@@ -73,7 +72,6 @@ public class LoadContactsPojos extends LoadPojos<ContactsPojo> {
                         phone = "";
                     }
 
-                    StringNormalizer.Result normalizedPhone = PhoneNormalizer.simplifyPhoneNumber(phone);
                     boolean starred = cur.getInt(starredIndex) != 0;
                     boolean primary = cur.getInt(isPrimaryIndex) != 0;
                     String photoId = cur.getString(photoIdIndex);
@@ -83,10 +81,9 @@ public class LoadContactsPojos extends LoadPojos<ContactsPojo> {
                                 Long.parseLong(photoId));
                     }
 
-                    ContactsPojo contact = new ContactsPojo(pojoScheme + contactId + '/' + phone,
-                            lookupKey, phone, normalizedPhone, icon, primary,
-                            starred, false);
+                    ContactsPojo contact = new ContactsPojo(pojoScheme + contactId + '/' + phone, lookupKey, icon, primary, starred);
 
+                    contact.setPhone(phone, false);
                     contact.setName(name);
 
                     if (contact.getName() != null) {
@@ -152,7 +149,7 @@ public class LoadContactsPojos extends LoadPojos<ContactsPojo> {
             if (nickCursor.getCount() > 0) {
                 int lookupKeyIndex = nickCursor.getColumnIndex(ContactsContract.Data.LOOKUP_KEY);
                 int nickNameIndex = nickCursor.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME);
-                while (nickCursor.moveToNext()) {
+                while (nickCursor.moveToNext() && !isCancelled()) {
                     String lookupKey = nickCursor.getString(lookupKeyIndex);
                     String nick = nickCursor.getString(nickNameIndex);
 
@@ -181,15 +178,15 @@ public class LoadContactsPojos extends LoadPojos<ContactsPojo> {
             if (!hasPrimary) {
                 HashSet<String> added = new HashSet<>(phones.size());
                 for (ContactsPojo contact : phones) {
-                    if (!added.contains(contact.normalizedPhone.toString())) {
+                    if (contact.normalizedPhone != null && !added.contains(contact.normalizedPhone.toString())) {
                         added.add(contact.normalizedPhone.toString());
                         contacts.add(contact);
                     }
                 }
             }
         }
-        long end = System.nanoTime();
-        Log.i("time", Long.toString((end - start) / 1000000) + " milliseconds to list contacts");
+        long end = System.currentTimeMillis();
+        Log.i("time", (end - start) + " milliseconds to list contacts");
         return contacts;
     }
 }

@@ -5,6 +5,7 @@ import android.net.Uri;
 import java.util.HashSet;
 import java.util.Set;
 
+import fr.neamar.kiss.normalizer.PhoneNormalizer;
 import fr.neamar.kiss.normalizer.StringNormalizer;
 
 public final class ContactsPojo extends Pojo {
@@ -13,9 +14,12 @@ public final class ContactsPojo extends Pojo {
 
     public final String lookupKey;
 
-    public final String phone;
+    public String phone;
     //phone without special characters
-    public final StringNormalizer.Result normalizedPhone;
+    public StringNormalizer.Result normalizedPhone;
+    // Is this number a home (local) number ?
+    private boolean homeNumber;
+
     public final Uri icon;
 
     // Is this a primary phone?
@@ -24,24 +28,16 @@ public final class ContactsPojo extends Pojo {
     // Is this contact starred ?
     public final boolean starred;
 
-    // Is this number a home (local) number ?
-    public final boolean homeNumber;
-
+    private String nickname = null;
+    // nickname without special characters
     public StringNormalizer.Result normalizedNickname = null;
 
-    private String nickname = "";
-
-    public ContactsPojo(String id, String lookupKey, String phone, StringNormalizer.Result normalizedPhone,
-                        Uri icon, boolean primary, boolean starred,
-                        boolean homeNumber) {
+    public ContactsPojo(String id, String lookupKey, Uri icon, boolean primary, boolean starred) {
         super(id);
         this.lookupKey = lookupKey;
-        this.phone = phone;
-        this.normalizedPhone = normalizedPhone;
         this.icon = icon;
         this.primary = primary;
         this.starred = starred;
-        this.homeNumber = homeNumber;
     }
 
     public String getNickname() {
@@ -62,4 +58,21 @@ public final class ContactsPojo extends Pojo {
             this.normalizedNickname = null;
         }
     }
+
+    public void setPhone(String phone, boolean homeNumber) {
+        if (phone != null) {
+            this.phone = phone;
+            this.normalizedPhone = PhoneNormalizer.simplifyPhoneNumber(phone);
+            this.homeNumber = homeNumber;
+        } else {
+            this.phone = null;
+            this.normalizedPhone = null;
+            this.homeNumber = false;
+        }
+    }
+
+    public boolean isHomeNumber() {
+        return homeNumber;
+    }
+
 }

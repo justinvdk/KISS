@@ -10,6 +10,7 @@ import androidx.annotation.CallSuper;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +21,10 @@ import fr.neamar.kiss.pojo.Pojo;
 import fr.neamar.kiss.pojo.PojoComparator;
 import fr.neamar.kiss.result.Result;
 
-public abstract class Searcher extends AsyncTask<Void, Result, Void> {
+public abstract class Searcher extends AsyncTask<Void, Result<?>, Void> {
+
+    private static final String TAG = Searcher.class.getSimpleName();
+
     // define a different thread than the default AsyncTask thread or else we will block everything else that uses AsyncTask while we search
     public static final ExecutorService SEARCH_THREAD = Executors.newSingleThreadExecutor();
     static final int DEFAULT_MAX_RESULTS = 50;
@@ -61,9 +65,6 @@ public abstract class Searcher extends AsyncTask<Void, Result, Void> {
             return false;
 
         Collections.addAll(this.processedPojos, pojos);
-        int maxResults = getMaxResultCount();
-        while (this.processedPojos.size() > maxResults)
-            this.processedPojos.poll();
 
         return true;
     }
@@ -98,7 +99,10 @@ public abstract class Searcher extends AsyncTask<Void, Result, Void> {
             activity.adapter.clear();
         } else {
             PriorityQueue<Pojo> queue = this.processedPojos;
-            ArrayList<Result> results = new ArrayList<>(queue.size());
+            int maxResults = getMaxResultCount();
+            while (queue.size() > maxResults)
+                queue.poll();
+            List<Result<?>> results = new ArrayList<>(queue.size());
             while (queue.peek() != null) {
                 results.add(Result.fromPojo(activity, queue.poll()));
             }
@@ -113,7 +117,7 @@ public abstract class Searcher extends AsyncTask<Void, Result, Void> {
         activity.resetTask();
 
         long time = System.currentTimeMillis() - start;
-        Log.v("Timing", "Time to run query `" + query + "` on " + getClass().getSimpleName() + " to completion: " + time + "ms");
+        Log.v(TAG, "Time to run query `" + query + "` on " + getClass().getSimpleName() + " to completion: " + time + "ms");
     }
 
     public void setRefresh(boolean refresh) {

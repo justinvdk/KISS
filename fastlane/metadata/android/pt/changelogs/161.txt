@@ -1,2 +1,2 @@
-* Correção de falhas ao abrir as definições
+* Corrigida falha ao abrir as configurações
 * Traduções atualizadas

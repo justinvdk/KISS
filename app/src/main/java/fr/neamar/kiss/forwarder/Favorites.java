@@ -14,6 +14,7 @@ import android.view.DragEvent;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import fr.neamar.kiss.KissApplication;
 import fr.neamar.kiss.MainActivity;
@@ -36,7 +38,7 @@ import fr.neamar.kiss.ui.ListPopup;
 import fr.neamar.kiss.utils.PackageManagerUtils;
 
 public class Favorites extends Forwarder implements View.OnClickListener, View.OnLongClickListener, View.OnTouchListener, View.OnDragListener {
-    private static final String TAG = "FavoriteForwarder";
+    private static final String TAG = Favorites.class.getSimpleName();
 
     // Package used by Android when an Intent can be matched with more than one app
     private static final String DEFAULT_RESOLVER = "com.android.internal.app.ResolverActivity";
@@ -44,16 +46,16 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
     /**
      * IDs for the favorites buttons
      */
-    private ArrayList<ViewHolder> favoritesViews = new ArrayList<>();
+    private List<ViewHolder> favoritesViews = new ArrayList<>();
 
     private static class ViewHolder {
         final View view;
         @NonNull
-        final Result result;
+        final Result<?> result;
         @NonNull
         final Pojo pojo;
 
-        ViewHolder(@NonNull Result result, @NonNull Pojo pojo, @NonNull Context context, @NonNull ViewGroup parent) {
+        ViewHolder(@NonNull Result<?> result, @NonNull Pojo pojo, @NonNull Context context, @NonNull ViewGroup parent) {
             this.result = result;
             this.pojo = pojo;
             view = result.inflateFavorite(context, parent);
@@ -106,6 +108,7 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
             notificationPrefs = mainActivity.getSharedPreferences(NotificationListener.NOTIFICATION_PREFERENCES_NAME, Context.MODE_PRIVATE);
         }
 
+        onFavoriteChange();
     }
 
     private ViewHolder findViewHolder(@NonNull Pojo pojo) {
@@ -118,10 +121,10 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
     }
 
     void onFavoriteChange() {
-        ArrayList<Pojo> favoritesPojo = KissApplication.getApplication(mainActivity).getDataHandler().getFavorites();
+        List<Pojo> favoritesPojo = KissApplication.getApplication(mainActivity).getDataHandler().getFavorites();
         favCount = favoritesPojo.size();
 
-        ArrayList<ViewHolder> holders = new ArrayList<>(favCount);
+        List<ViewHolder> holders = new ArrayList<>(favCount);
 
         ViewGroup favoritesBar = mainActivity.favoritesBar;
 
@@ -154,7 +157,7 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
             }
 
             if (notificationPrefs != null) {
-                int dotColor = isExternalFavoriteBarEnabled() ? UIColors.getPrimaryColor(mainActivity) : Color.WHITE;
+                int dotColor = isExternalFavoriteBarEnabled() ? UIColors.getNotificationDotColor(mainActivity) : Color.WHITE;
 
                 ImageView notificationDot = viewHolder.view.findViewById(R.id.item_notification_dot);
                 if (notificationDot == null)
@@ -172,7 +175,7 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
 
         // Remove any leftover views from previous renders
         while (favoritesBar.getChildCount() > favCount) {
-            Log.e("WTF", "Disposing");
+            Log.e(TAG, "Disposing leftover view");
             View toBeDisposed = favoritesBar.getChildAt(favCount);
             disposeOf(toBeDisposed);
             favoritesBar.removeViewAt(favCount);
@@ -184,7 +187,7 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
     }
 
     void disposeOf(@Nullable View toBeDisposed) {
-        if(toBeDisposed == null) {
+        if (toBeDisposed == null) {
             return;
         }
         toBeDisposed.setOnClickListener(null);
@@ -232,7 +235,7 @@ public class Favorites extends Forwarder implements View.OnClickListener, View.O
     @SuppressLint("ClickableViewAccessibility")
     public boolean onTouch(View view, MotionEvent motionEvent) {
         // How long to hold your finger in place to trigger the app menu.
-        final int LONG_PRESS_DELAY = 250;
+        final int LONG_PRESS_DELAY = ViewConfiguration.getLongPressTimeout();
 
         if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
             startTime = motionEvent.getEventTime();

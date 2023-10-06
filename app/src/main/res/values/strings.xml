@@ -44,9 +44,12 @@
     <string name="reset_excluded_apps_warn">Do you really want to reset your excluded app list?</string>
     <string name="reset_excluded_from_history_apps_name">Reset list of apps excluded from history</string>
     <string name="reset_excluded_from_history_apps_warn">Do you really want to reset your excluded from history app list?</string>
-    <string name="settings_excluded_apps">Excluded apps</string>
+    <string name="reset_excluded_app_shortcuts_name">Reset list of apps excluded from showing shortcuts</string>
+    <string name="reset_excluded_app_shortcuts_warn">Do you really want to reset your list of apps excluded from showing shortcuts?</string>
+    <string name="settings_excluded_apps">Excluded entries</string>
     <string name="ui_excluded_apps">View or edit apps excluded from KISS</string>
     <string name="ui_excluded_from_history_apps">View or edit apps excluded from history</string>
+    <string name="ui_excluded_from_shortcuts_apps">View or edit apps excluded from showing shortcuts</string>
     <string name="ui_excluded_apps_dialog_title">Select apps to exclude</string>
     <string name="reset_warn">Do you really want to reset your history?</string>
     <string name="reset_favorites_name">Reset your list of favorites</string>
@@ -88,6 +91,7 @@
     <string name="search_provider_error_char">Please, do not use the character |</string>
     <string name="search_provider_error_placeholder">Please, use %s for the query placeholder</string>
     <string name="search_provider_error_url">Please, use a valid URL</string>
+    <string name="search_provider_error_uri_cannot_be_handle">URI provided cannot be handle by any application in your device.</string>
     <string name="search_provider_error_exists">A provider with this name already exists</string>
     <string name="history_mode_name">History mode</string>
     <string name="history_mode_desc">Select how history should be sorted</string>
@@ -98,10 +102,6 @@
     <string name="freeze_history_warn">Are you sure you want to freeze history and turn off further updates? Your history will not change anymore.</string>
     <string name="icons_pack_name">Icon pack (ADW.Launcher theme)</string>
     <string name="icons_pack_default_name">System icons</string>
-    <string name="icons_pack_squircle_name">Squircle</string>
-    <string name="icons_pack_square_name">Square</string>
-    <string name="icons_pack_circle_name">Circle</string>
-    <string name="icons_pack_teardrop_name">Teardrop</string>
     <string name="alias_phone">dial,call,phone</string>
     <string name="alias_contacts">contacts,people,relations</string>
     <string name="alias_web">Internet,web,browser</string>
@@ -148,6 +148,7 @@
     <string name="menu_app_uninstall">Uninstall</string>
     <string name="menu_app_hibernate">Hibernate</string>
     <string name="menu_shortcut_remove">Remove shortcut</string>
+    <string name="menu_shortcut_pin">Pin shortcut</string>
     <string name="toast_hibernate_completed">%s hibernated, relaunch to awake.</string>
     <string name="toast_hibernate_error">%s not hibernated.</string>
     <string name="menu_contact_copy_phone">Copy phone number</string>
@@ -184,6 +185,7 @@
     <string name="color_transparent_dark">Transparently dark</string>
     <string name="color_transparent_white">Transparently white</string>
     <string name="color_transparent">Transparent</string>
+    <string name="color_system">Colors of System</string>
     <!-- Default title for color picker dialog [CHAR LIMIT=30] -->
     <string name="color_picker_default_title">Select a Color</string>
     <!-- Content description for a color square. -->
@@ -193,6 +195,7 @@
     <string name="transparent_search_bar">Transparent search bar</string>
     <string name="transparent_favorites_bar">Transparent favorites bar</string>
     <string name="large_search_bar">Bigger search bar</string>
+    <string name="large_result_list_margins">Bigger list margins</string>
     <string name="rounded_list">Rounded list corners</string>
     <string name="rounded_bars">Rounded bar corners</string>
     <string name="swap_kiss_button_with_menu">KISS button on the right</string>
@@ -246,7 +249,7 @@
     <string name="gesture_down_name">Action on swipe down</string>
     <string name="gesture_left_name">Action on swipe left</string>
     <string name="gesture_right_name">Action on swipe right</string>
-    <string name="enable_double_tap_to_lock">To enable double-tap to lock, you\'ll need to grant additional permissions: enable KISS in the following screen.</string>
+    <string name="enable_double_tap_to_lock">Double-tap to lock needs the Android Accessibility API. No data is processed, no data is stored. To use this feature, enable KISS in the following screen.</string>
     <string name="double_tap_to_lock">Double tap to lock screen</string>
     <string name="gestures">Gestures</string>
     <!-- custom icon dialog -->
@@ -292,7 +295,6 @@
     <string name="gesture_history">Display history</string>
     <string name="gesture_homescreen">Go to homescreen</string>
     <string name="gesture_launch_pojo">Launch…</string>
-    <string name="small_results">Display smaller results</string>
     <string name="results_size">Results display size</string>
     <string name="theme_wallpaper">Wallpaper</string>
     <string name="show_subicons">Show app icon on shortcuts</string>
@@ -331,4 +333,6 @@
     <string name="shape_hexagon">Hexagon</string>
     <string name="excluded_apps_toggle">Show excluded apps in search</string>
     <string name="always_default_web_search_on_enter">Always trigger default web search provider on enter</string>
+    <string name="icons_themed_name">Themed icons</string>
+    <string name="icons_themed_summary">Icons are tinted with system colors (beta)</string>
 </resources>

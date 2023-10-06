@@ -1,5 +1,7 @@
 package fr.neamar.kiss.preference;
 
+import static android.content.Context.CLIPBOARD_SERVICE;
+
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -7,6 +9,7 @@ import android.content.SharedPreferences;
 import android.preference.DialogPreference;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -21,12 +24,10 @@ import fr.neamar.kiss.DataHandler;
 import fr.neamar.kiss.KissApplication;
 import fr.neamar.kiss.R;
 import fr.neamar.kiss.TagsHandler;
-import fr.neamar.kiss.dataprovider.AppProvider;
-import fr.neamar.kiss.dataprovider.ShortcutsProvider;
-
-import static android.content.Context.CLIPBOARD_SERVICE;
 
 public class ImportSettingsPreference extends DialogPreference {
+
+    private static final String TAG = ImportSettingsPreference.class.getSimpleName();
 
     public ImportSettingsPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -36,10 +37,12 @@ public class ImportSettingsPreference extends DialogPreference {
     public void onClick(DialogInterface dialog, int which) {
         super.onClick(dialog, which);
         if (which == DialogInterface.BUTTON_POSITIVE) {
-            // Apply changes
-            ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(CLIPBOARD_SERVICE);
-            String clipboardText = clipboard.getPrimaryClip().getItemAt(0).coerceToText(getContext()).toString();
             try {
+                // Apply changes
+                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(CLIPBOARD_SERVICE);
+                // Can throw NullPointerException if the application doesn't have focus. Display a toast if this happens
+                String clipboardText = clipboard.getPrimaryClip().getItemAt(0).coerceToText(getContext()).toString();
+
                 // Validate JSON
                 JSONObject o = new JSONObject(clipboardText);
                 if (o.getInt("__v") > BuildConfig.VERSION_CODE) {
@@ -82,21 +85,15 @@ public class ImportSettingsPreference extends DialogPreference {
                     Iterator<?> tagKeys = tags.keys();
                     while (tagKeys.hasNext()) {
                         String id = (String) tagKeys.next();
-                        tagHandler.setTags(id, tags.getString(id).toLowerCase());
+                        tagHandler.setTags(id, tags.getString(id));
                     }
-                    AppProvider appProvider = dataHandler.getAppProvider();
-                    if (appProvider != null) {
-                        appProvider.reload();
-                    }
-                    ShortcutsProvider shortcutsProvider = dataHandler.getShortcutsProvider();
-                    if(shortcutsProvider != null) {
-                        shortcutsProvider.reload();
-                    }
+                    dataHandler.reloadApps();
+                    dataHandler.reloadShortcuts();
                 }
 
                 Toast.makeText(getContext(), "Preferences imported!", Toast.LENGTH_SHORT).show();
-            } catch (JSONException e) {
-                e.printStackTrace();
+            } catch (JSONException | NullPointerException e) {
+                Log.e(TAG, "Unable to import preferences", e);
                 Toast.makeText(getContext(), "Unable to import preferences", Toast.LENGTH_SHORT).show();
             }
         }

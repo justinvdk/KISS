@@ -1,16 +1,20 @@
 package fr.neamar.kiss.utils;
 
-import android.annotation.TargetApi;
+import android.content.Context;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.Process;
+import android.os.UserManager;
+import android.util.Log;
 
+import androidx.annotation.RequiresApi;
 
 /**
  * Wrapper class for `android.os.UserHandle` that works with all Android versions
  */
 public class UserHandle implements Parcelable {
+    private static final String TAG = UserHandle.class.getSimpleName();
     private final long serial;
     private final Parcelable handle; // android.os.UserHandle on Android 4.2 and newer
 
@@ -18,7 +22,6 @@ public class UserHandle implements Parcelable {
         this(0, null);
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     public UserHandle(long serial, android.os.UserHandle user) {
         if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
             // OS does not provide any APIs for multi-user support
@@ -35,6 +38,15 @@ public class UserHandle implements Parcelable {
             this.handle = user;
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    public UserHandle(Context context, android.os.UserHandle userHandle) {
+        final UserManager manager = (UserManager) context.getSystemService(Context.USER_SERVICE);
+        assert manager != null;
+        serial = manager.getSerialNumberForUser(userHandle);
+        handle = userHandle;
+    }
+
 
     protected UserHandle(Parcel in) {
         serial = in.readLong();
@@ -70,7 +82,7 @@ public class UserHandle implements Parcelable {
         }
     };
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     public android.os.UserHandle getRealHandle() {
         if (this.handle != null) {
             return (android.os.UserHandle) this.handle;
@@ -93,7 +105,6 @@ public class UserHandle implements Parcelable {
         }
     }
 
-    @SuppressWarnings("CatchAndPrintStackTrace")
     public boolean hasStringUserSuffix(String string, char separator) {
         long serial = 0;
 
@@ -103,7 +114,7 @@ public class UserHandle implements Parcelable {
             try {
                 serial = Long.parseLong(serialText);
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                Log.e(TAG, String.format("Unable to get suffix from string '%s' separated by '%s'", string, separator), e);
             }
         }
 

@@ -1,12 +1,15 @@
 package fr.neamar.kiss.forwarder;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Build;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -21,53 +24,69 @@ import fr.neamar.kiss.UIColors;
 import fr.neamar.kiss.utils.ViewGroupUtils;
 
 // Deals with any settings in the "User Interface" setting sub-screen
-class InterfaceTweaks extends Forwarder {
+public class InterfaceTweaks extends Forwarder {
     InterfaceTweaks(MainActivity mainActivity) {
         super(mainActivity);
 
         // Setting the theme needs to be done before setContentView()
+        applyTheme(mainActivity, prefs);
+    }
+
+    private static void applyTheme(Activity act, SharedPreferences prefs) {
         String theme = prefs.getString("theme", "transparent");
         switch (theme) {
             case "dark":
-                mainActivity.setTheme(R.style.AppThemeDark);
+                act.setTheme(R.style.AppThemeDark);
                 break;
             case "transparent":
-                mainActivity.setTheme(R.style.AppThemeTransparent);
+                act.setTheme(R.style.AppThemeTransparent);
                 break;
             case "semi-transparent":
-                mainActivity.setTheme(R.style.AppThemeSemiTransparent);
+                act.setTheme(R.style.AppThemeSemiTransparent);
                 break;
             case "semi-transparent-dark":
-                mainActivity.setTheme(R.style.AppThemeSemiTransparentDark);
+                act.setTheme(R.style.AppThemeSemiTransparentDark);
                 break;
             case "transparent-dark":
-                mainActivity.setTheme(R.style.AppThemeTransparentDark);
+                act.setTheme(R.style.AppThemeTransparentDark);
                 break;
             case "amoled-dark":
-                mainActivity.setTheme(R.style.AppThemeAmoledDark);
+                act.setTheme(R.style.AppThemeAmoledDark);
                 break;
         }
 
-        UIColors.applyOverlay(mainActivity, prefs);
+        UIColors.applyOverlay(act, prefs);
 
         switch (prefs.getString("results-size", "")) {
             case "smallest":
-                mainActivity.getTheme().applyStyle(R.style.OverlayResultSizeSmallest, true);
+                act.getTheme().applyStyle(R.style.OverlayResultSizeSmallest, true);
                 break;
             case "small":
-                mainActivity.getTheme().applyStyle(R.style.OverlayResultSizeSmall, true);
+                act.getTheme().applyStyle(R.style.OverlayResultSizeSmall, true);
                 break;
             case "medium":
-                mainActivity.getTheme().applyStyle(R.style.OverlayResultSizeMedium, true);
+                act.getTheme().applyStyle(R.style.OverlayResultSizeMedium, true);
                 break;
             case "default":
             default:
-                mainActivity.getTheme().applyStyle(R.style.OverlayResultSizeStandard, true);
+                act.getTheme().applyStyle(R.style.OverlayResultSizeStandard, true);
                 break;
         }
     }
 
+    public static void applySettingsTheme(Activity act, SharedPreferences prefs) {
+        String theme = prefs.getString("theme", "light");
+        if (theme.equals("amoled-dark")) {
+            act.setTheme(R.style.SettingThemeAmoledDark);
+        } else if (theme.contains("dark")) {
+            act.setTheme(R.style.SettingThemeDark);
+        }
+        UIColors.updateThemePrimaryColor(act);
+        UIColors.applyOverlay(act, prefs);
+    }
+
     void onCreate() {
+        UIColors.clearPrimaryColorCache();
         UIColors.updateThemePrimaryColor(mainActivity);
         applyRoundedCorners(mainActivity);
         swapKissButtonWithMenu(mainActivity);
@@ -95,16 +114,22 @@ class InterfaceTweaks extends Forwarder {
             }
         }
 
-        // Notification drawer icon color
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (prefs.getBoolean("black-notification-icons", false)) {
-                // Apply the flag to any view, so why not the edittext!
-                mainActivity.searchEditText.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-            }
-        }
-
         if (prefs.getBoolean("pref-hide-search-bar-hint", false)) {
             mainActivity.searchEditText.setHint("");
+        }
+
+        if (prefs.getBoolean("large-result-list-margins", false)) {
+            ViewGroup.LayoutParams params = mainActivity.listContainer.getLayoutParams();
+            if (params instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) params;
+
+                int size = mainActivity.getResources().getDimensionPixelSize(R.dimen.list_margin_horizontal_large);
+                marginLayoutParams.setMargins(size, marginLayoutParams.topMargin, size, marginLayoutParams.bottomMargin);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    marginLayoutParams.setMarginStart(size);
+                    marginLayoutParams.setMarginEnd(size);
+                }
+            }
         }
     }
 

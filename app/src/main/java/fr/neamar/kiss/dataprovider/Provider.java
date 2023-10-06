@@ -16,7 +16,7 @@ import fr.neamar.kiss.loader.LoadPojos;
 import fr.neamar.kiss.pojo.Pojo;
 
 public abstract class Provider<T extends Pojo> extends Service implements IProvider {
-    private final static String TAG = "Provider";
+    private final static String TAG = Provider.class.getSimpleName();
 
     /**
      * Binder given to clients
@@ -33,6 +33,7 @@ public abstract class Provider<T extends Pojo> extends Service implements IProvi
     private String pojoScheme = "(none)://";
 
     private long start;
+    private LoadPojos<T> loader;
 
     /**
      * (Re-)load the providers resources when the provider has been completely initialized
@@ -47,18 +48,30 @@ public abstract class Provider<T extends Pojo> extends Service implements IProvi
 
 
     void initialize(LoadPojos<T> loader) {
+        cancelInitialize();
         start = System.currentTimeMillis();
 
         Log.i(TAG, "Starting provider: " + this.getClass().getSimpleName());
 
         loader.setProvider(this);
         this.pojoScheme = loader.getPojoScheme();
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        this.loader = (LoadPojos<T>) loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    /**
+     * Cancel running {@link LoadPojos<T>} task and set to null.
+     */
+    private void cancelInitialize() {
+        if (this.loader != null) {
+            this.loader.cancel(false);
+            this.loader = null;
+            Log.i(TAG, "Cancelling provider: " + this.getClass().getSimpleName());
+        }
     }
 
     public void reload() {
         // Handled at subclass level
-        if(pojos.size() > 0) {
+        if (pojos.size() > 0) {
             Log.v(TAG, "Reloading provider: " + this.getClass().getSimpleName());
         }
     }
@@ -67,14 +80,15 @@ public abstract class Provider<T extends Pojo> extends Service implements IProvi
         return this.loaded;
     }
 
-    public void loadOver(ArrayList<T> results) {
+    public void loadOver(List<T> results) {
         long time = System.currentTimeMillis() - start;
 
         Log.i(TAG, "Time to load " + this.getClass().getSimpleName() + ": " + time + "ms");
 
         // Store results
-        this.pojos = results;
+        this.loader = null;
         this.loaded = true;
+        this.pojos = results;
 
         // Broadcast this event
         Intent i = new Intent(MainActivity.LOAD_OVER);

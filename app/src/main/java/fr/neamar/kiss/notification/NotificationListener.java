@@ -18,7 +18,7 @@ import java.util.Set;
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class NotificationListener extends NotificationListenerService {
-    public static final String TAG = "NotifListener";
+    public static final String TAG = NotificationListener.class.getSimpleName();
     public static final String NOTIFICATION_PREFERENCES_NAME = "notifications";
 
     private SharedPreferences prefs;
@@ -121,6 +121,10 @@ public class NotificationListener extends NotificationListenerService {
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
+        if (sbn == null) {
+            return;
+        }
+
         String packageKey = getPackageKey(sbn);
 
         Set<String> currentNotifications = getCurrentNotificationsForPackage(packageKey);

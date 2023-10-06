@@ -12,7 +12,8 @@ import android.os.UserManager;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import fr.neamar.kiss.KissApplication;
@@ -24,6 +25,7 @@ import fr.neamar.kiss.utils.UserHandle;
 
 public class LoadAppPojos extends LoadPojos<AppPojo> {
 
+    private static final String TAG = LoadAppPojos.class.getSimpleName();
     private final TagsHandler tagsHandler;
 
     public LoadAppPojos(Context context) {
@@ -32,10 +34,10 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
     }
 
     @Override
-    protected ArrayList<AppPojo> doInBackground(Void... params) {
-        long start = System.nanoTime();
+    protected List<AppPojo> doInBackground(Void... params) {
+        long start = System.currentTimeMillis();
 
-        ArrayList<AppPojo> apps = new ArrayList<>();
+        List<AppPojo> apps = new ArrayList<>();
 
         Context ctx = context.get();
         if (ctx == null) {
@@ -43,8 +45,8 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
         }
 
         Set<String> excludedAppList = KissApplication.getApplication(ctx).getDataHandler().getExcluded();
-        Set<String> excludedAppListFavorites = KissApplication.getApplication(ctx).getDataHandler().getExcludedFavorites();
         Set<String> excludedFromHistoryAppList = KissApplication.getApplication(ctx).getDataHandler().getExcludedFromHistory();
+        Set<String> excludedShortcutsAppList = KissApplication.getApplication(ctx).getDataHandler().getExcludedShortcutApps();
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             UserManager manager = (UserManager) ctx.getSystemService(Context.USER_SERVICE);
@@ -54,21 +56,11 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
             for (android.os.UserHandle profile : manager.getUserProfiles()) {
                 UserHandle user = new UserHandle(manager.getSerialNumberForUser(profile), profile);
                 for (LauncherActivityInfo activityInfo : launcher.getActivityList(null, profile)) {
+                    if (isCancelled()) {
+                        break;
+                    }
                     ApplicationInfo appInfo = activityInfo.getApplicationInfo();
-
-                    String id = user.addUserSuffixToString(pojoScheme + appInfo.packageName + "/" + activityInfo.getName(), '/');
-
-                    boolean isExcluded = excludedAppList.contains(AppPojo.getComponentName(appInfo.packageName, activityInfo.getName(), user));
-                    isExcluded |= excludedAppListFavorites.contains(id);
-                    boolean isExcludedFromHistory = excludedFromHistoryAppList.contains(id);
-
-                    AppPojo app = new AppPojo(id, appInfo.packageName, activityInfo.getName(), user,
-                            isExcluded, isExcludedFromHistory);
-
-                    app.setName(activityInfo.getLabel().toString());
-
-                    app.setTags(tagsHandler.getTags(app.id));
-
+                    final AppPojo app = createPojo(user, appInfo.packageName, activityInfo.getName(), activityInfo.getLabel(), excludedAppList, excludedFromHistoryAppList, excludedShortcutsAppList);
                     apps.add(app);
                 }
             }
@@ -79,26 +71,16 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
             mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
             for (ResolveInfo info : manager.queryIntentActivities(mainIntent, 0)) {
+                if (isCancelled()) {
+                    break;
+                }
                 ApplicationInfo appInfo = info.activityInfo.applicationInfo;
-                String id = pojoScheme + appInfo.packageName + "/" + info.activityInfo.name;
-                boolean isExcluded = excludedAppList.contains(
-                        AppPojo.getComponentName(appInfo.packageName, info.activityInfo.name, new UserHandle())
-                );
-                isExcluded |= excludedAppListFavorites.contains(id);
-                boolean isExcludedFromHistory = excludedFromHistoryAppList.contains(id);
-
-                AppPojo app = new AppPojo(id, appInfo.packageName, info.activityInfo.name, new UserHandle(),
-                        isExcluded, isExcludedFromHistory);
-
-                app.setName(info.loadLabel(manager).toString());
-
-                app.setTags(tagsHandler.getTags(app.id));
-
+                final AppPojo app = createPojo(new UserHandle(), appInfo.packageName, info.activityInfo.name, info.loadLabel(manager), excludedAppList, excludedFromHistoryAppList, excludedShortcutsAppList);
                 apps.add(app);
             }
         }
 
-        HashMap<String, AppRecord> customApps = DBHelper.getCustomAppData(ctx);
+        Map<String, AppRecord> customApps = DBHelper.getCustomAppData(ctx);
         for (AppPojo app : apps) {
             AppRecord customApp = customApps.get(app.getComponentName());
             if (customApp == null)
@@ -109,9 +91,25 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
                 app.setCustomIconId(customApp.dbId);
         }
 
-        long end = System.nanoTime();
-        Log.i("time", Long.toString((end - start) / 1000000) + " milliseconds to list apps");
+        long end = System.currentTimeMillis();
+        Log.i(TAG, (end - start) + " milliseconds to list apps");
 
         return apps;
+    }
+
+    private AppPojo createPojo(UserHandle userHandle, String packageName, String activityName, CharSequence label, Set<String> excludedAppList, Set<String> excludedFromHistoryAppList, Set<String> excludedShortcutsAppList) {
+        String id = userHandle.addUserSuffixToString(pojoScheme + packageName + "/" + activityName, '/');
+
+        boolean isExcluded = excludedAppList.contains(AppPojo.getComponentName(packageName, activityName, userHandle));
+        boolean isExcludedFromHistory = excludedFromHistoryAppList.contains(id);
+        boolean isExcludedShortcuts = excludedShortcutsAppList.contains(packageName);
+
+        AppPojo app = new AppPojo(id, packageName, activityName, userHandle, isExcluded, isExcludedFromHistory, isExcludedShortcuts);
+
+        app.setName(label.toString());
+
+        app.setTags(tagsHandler.getTags(app.id));
+
+        return app;
     }
 }

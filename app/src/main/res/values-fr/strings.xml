@@ -141,6 +141,7 @@
     <string name="search_provider_error_char">Veuillez ne pas utiliser le caractère |</string>
     <string name="search_provider_error_placeholder">Veuillez utiliser %s pour les requêtes</string>
     <string name="search_provider_error_url">Veuillez utiliser une URL valide</string>
+    <string name="search_provider_error_uri_cannot_be_handle">L\'URI proposé n\'est gérée par aucune application de votre appareil.</string>
     <string name="search_provider_error_exists">Un moteur de recherche porte déjà ce nom</string>
     <string name="lwp_touch">Envoyer des commandes tactiles au fond d\'écran</string>
     <string name="lwp_drag">Simuler un glissement du fond d\'écran</string>
@@ -186,7 +187,7 @@
     <string name="pref_show_untagged">Afficher action non étiquettée</string>
     <string name="reset_excluded_from_history_apps_name">Réinitialiser la liste des applications exclues de l\'historique</string>
     <string name="reset_excluded_from_history_apps_warn">Êtes-vous sûr·e de vouloir réinitialiser la liste des applications exclues de l\'historique \?</string>
-    <string name="settings_excluded_apps">Applications exclues</string>
+    <string name="settings_excluded_apps">Élements exclues</string>
     <string name="ui_excluded_from_history_apps">Voir ou modifier les applications exclues de l\'historique</string>
     <string name="excluded_app_history_added">Applications exclues de l\'historique. Réinitialisation via les paramètres de KISS</string>
     <string name="menu_exclude_kiss">de KISS</string>
@@ -227,7 +228,6 @@
     <string name="theme_shadow">Contour du texte (ombre)</string>
     <string name="theme_customisation">Personnalisation du thème avancée</string>
     <string name="show_subicons">Afficher les icônes des applications dans les résultats</string>
-    <string name="small_results">Afficher des résultats plus petits</string>
     <string name="gesture_history">Afficher l\'historique</string>
     <string name="gesture_apps">Afficher la liste des applications</string>
     <string name="gesture_notifications">Afficher le panneau de notifications</string>
@@ -244,14 +244,10 @@
     <string name="theme_semi_dark">Semi-transparent sombre</string>
     <string name="theme_semi_light">Semi-transparent</string>
     <string name="double_tap_to_lock">Double-tap pour vérouiller l\'écran</string>
-    <string name="enable_double_tap_to_lock">Pour activer le vérouillage par double tap, vous devrez accorder des permissions supplémentaires : activez KISS dans l\'écran suivant.</string>
+    <string name="enable_double_tap_to_lock">Pour activer le verrouillage par double tap, vous devrez accorder des permissions supplémentaires : activez KISS dans l\'écran suivant.</string>
     <string name="gesture_down_name">Action du glissement vers le bas</string>
     <string name="gesture_up_name">Action du glissement vers le haut</string>
     <string name="lock_service_description">Vérouiller l\'écran depuis le lanceur KISS</string>
-    <string name="icons_pack_teardrop_name">Larme</string>
-    <string name="icons_pack_circle_name">Cercle</string>
-    <string name="icons_pack_square_name">Carré</string>
-    <string name="icons_pack_squircle_name">Carré Arrondi</string>
     <string name="theme_wallpaper">Fond d\'écran</string>
     <string name="gesture_right_name">Action du glissement vers la droite</string>
     <string name="gesture_left_name">Action du glissement vers la gauche</string>
@@ -301,7 +297,7 @@
     <string name="shape_square">Carré</string>
     <string name="shape_teardrop_top_left">Larme haut-gauche</string>
     <string name="shape_teardrop_random">Larme au hasard</string>
-    <string name="shape_squircle">Squircle</string>
+    <string name="shape_squircle">Carré Arrondi</string>
     <string name="shape_teardrop_bottom_right">Larme bas-droite</string>
     <string name="shape_teardrop_bottom_left">Larme bas-gauche</string>
     <string name="shape_teardrop_top_right">Larme haut-droite</string>
@@ -317,4 +313,12 @@
     <string name="excluded_apps_toggle">Montrer les applications exclues lors des recherches</string>
     <string name="always_default_web_search_on_enter">Toujours utiliser la recherche web par défaut lors d\'une saisie de texte</string>
     <string name="results_size">Taille d\'affichage des résultats</string>
+    <string name="large_result_list_margins">Marges des listes plus grandes</string>
+    <string name="reset_excluded_app_shortcuts_name">Réinitialiser la liste des applications exclues de l\'affichage des raccoucis</string>
+    <string name="reset_excluded_app_shortcuts_warn">Voulez-vous vraiment réinitialiser votre liste d\'applications exclues de l\'affichage des raccourcis \?</string>
+    <string name="ui_excluded_from_shortcuts_apps">Voir ou éditer les applications exclues de l\'affichage des raccourcis</string>
+    <string name="color_system">Couleurs du système</string>
+    <string name="icons_themed_summary">Les icônes sont teinté avec les couleurs du système (bêta)</string>
+    <string name="icons_themed_name">Thème pour les icônes</string>
+    <string name="menu_shortcut_pin">Épingler le raccourcis</string>
 </resources>

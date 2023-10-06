@@ -1,5 +1,7 @@
 package fr.neamar.kiss;
 
+import static android.view.HapticFeedbackConstants.LONG_PRESS;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
@@ -18,7 +20,9 @@ import android.inputmethodservice.KeyboardView;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -61,11 +65,8 @@ import fr.neamar.kiss.ui.BottomPullEffectView;
 import fr.neamar.kiss.utils.KISSKeyboardHelper;
 import fr.neamar.kiss.ui.ListPopup;
 import fr.neamar.kiss.ui.SearchEditText;
-import fr.neamar.kiss.utils.PackageManagerUtils;
 import fr.neamar.kiss.utils.Permission;
 import fr.neamar.kiss.utils.SystemUiVisibilityHelper;
-
-import static android.view.HapticFeedbackConstants.LONG_PRESS;
 
 public class MainActivity extends Activity implements QueryInterface, View.OnTouchListener {
 
@@ -73,7 +74,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
     public static final String LOAD_OVER = "fr.neamar.summon.LOAD_OVER";
     public static final String FULL_LOAD_OVER = "fr.neamar.summon.FULL_LOAD_OVER";
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     /**
      * Adapter to display records
@@ -361,7 +362,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         registerForContextMenu(menuButton);
 
         // Enable/disable phone broadcast receiver
-        PackageManagerUtils.enableComponent(this, IncomingCallHandler.class, prefs.getBoolean("enable-phone-history", false));
+        IncomingCallHandler.setEnabled(this, prefs.getBoolean("enable-phone-history", false));
 
         // Hide the "X" after the text field, instead displaying the menu button
         displayClearOnInput();
@@ -369,7 +370,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         systemUiVisibilityHelper = new SystemUiVisibilityHelper(this);
 
         // For devices with hardware keyboards, give focus to search field.
-        if(getResources().getConfiguration().keyboard == Configuration.KEYBOARD_QWERTY || getResources().getConfiguration().keyboard == Configuration.KEYBOARD_12KEY) {
+        if (getResources().getConfiguration().keyboard == Configuration.KEYBOARD_QWERTY || getResources().getConfiguration().keyboard == Configuration.KEYBOARD_12KEY) {
             searchEditText.requestFocus();
         }
 
@@ -467,7 +468,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         // http://developer.android.com/reference/android/app/Activity.html#onNewIntent(android.content.Intent)
         // Animation can't happen in this method, since the activity is not resumed yet, so they'll happen in the onResume()
         // https://github.com/Neamar/KISS/issues/569
-        if (!searchEditText.getText().toString().isEmpty()) {
+        if (!TextUtils.isEmpty(searchEditText.getText())) {
             Log.i(TAG, "Clearing search field");
             searchEditText.setText("");
         }
@@ -511,7 +512,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
             menuButton.performHapticFeedback(LONG_PRESS);
             return true;
         }
-        if(keycode != KeyEvent.KEYCODE_BACK ) {
+        if (keycode != KeyEvent.KEYCODE_BACK) {
             searchEditText.requestFocus();
             searchEditText.dispatchKeyEvent(e);
         }
@@ -524,20 +525,19 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
             return true;
         }
 
-        switch (item.getItemId()) {
-            case R.id.settings:
-                startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS));
-                return true;
-            case R.id.wallpaper:
-                Intent intent = new Intent(Intent.ACTION_SET_WALLPAPER);
-                startActivity(Intent.createChooser(intent, getString(R.string.menu_wallpaper)));
-                return true;
-            case R.id.preferences:
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int itemId = item.getItemId();
+        if (itemId == R.id.settings) {
+            startActivity(new Intent(Settings.ACTION_SETTINGS));
+            return true;
+        } else if (itemId == R.id.wallpaper) {
+            Intent intent = new Intent(Intent.ACTION_SET_WALLPAPER);
+            startActivity(Intent.createChooser(intent, getString(R.string.menu_wallpaper)));
+            return true;
+        } else if (itemId == R.id.preferences) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -832,7 +832,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
     public void launchOccurred() {
         // We selected an item on the list,
         // now we can cleanup the filter:
-        if (!searchEditText.getText().toString().isEmpty()) {
+        if (!TextUtils.isEmpty(searchEditText.getText())) {
             searchEditText.setText("");
             displayClearOnInput();
         } else if (isViewingAllApps()) {

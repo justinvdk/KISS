@@ -88,13 +88,14 @@
     <string name="restart_name">KISS neu starten</string>
     <string name="freeze_history_name">Verlauf einfrieren</string>
     <string name="restart_desc">Probleme mit Thema oder neuen, nicht angezeigten, Kontakten umgehen</string>
-    <string name="ui_excluded_apps">In KISS ausgeblendete Apps anzeigen oder bearbeiten</string>
+    <string name="ui_excluded_apps">In KISS ausgeblendete Apps ansehen und bearbeiten</string>
     <string name="restart_warn">Wollen Sie KISS wirklich neu starten? Wenn KISS nicht Ihr Standard-Launcher ist, wird er einfach beendet.</string>
-    <string name="ui_excluded_apps_dialog_title">Einzublendende Apps anwählen</string>
+    <string name="ui_excluded_apps_dialog_title">Auszublendende Apps anwählen</string>
     <string name="freeze_history_warn">Sind Sich sicher, dass Sie den Verlauf einfrieren und keine zukünftigen Änderungen zulassen wollen? Der Verlauf wird sich nicht mehr ändern.</string>
     <string name="history_mode_name">Sortiermodus</string>
     <string name="history_mode_desc">Festlegen wie Einträge im Verlauf sortiert werden</string>
     <string name="menu_shortcut_remove">Verknüpfung entfernen</string>
+    <string name="menu_shortcut_pin">Verknüpfung anheften</string>
     <string name="settings_storage">Speicher</string>
     <string name="settings_dev">Entwicklereinstellungen</string>
     <string name="keyboard_options">Tastatureinstellungen</string>
@@ -124,6 +125,7 @@
     <string name="color_transparent_dark">Dunkel-Transparent</string>
     <string name="color_transparent_white">Hell-Transparent</string>
     <string name="color_transparent">Voll-Transparent</string>
+    <string name="color_system">Farben vom System</string>
     <string name="transparent_search_bar">Durchsichtige Suchleiste</string>
     <string name="transparent_favorites_bar">Durchsichtige Favoritenleiste</string>
     <string name="large_search_bar">Größere Suchleiste</string>
@@ -188,7 +190,7 @@
     <string name="pref_hide_circle_desc">Funktionen bleiben weiterhin verfügbar, sind aber nicht sichtbar.</string>
     <string name="reset_excluded_from_history_apps_name">Liste der aus dem Verlauf ausgeblendeten Apps zurücksetzen</string>
     <string name="reset_excluded_from_history_apps_warn">Die Liste der aus dem Verlauf ausgeblendeten Apps wirklich zurücksetzen\?</string>
-    <string name="settings_excluded_apps">Ausgeblendete Apps</string>
+    <string name="settings_excluded_apps">Ausgeblendete Einträge</string>
     <string name="ui_excluded_from_history_apps">Aus dem Verlauf ausgeblendete Apps ansehen und bearbeiten</string>
     <string name="excluded_app_history_added">App aus dem Verlauf ausgeblendet – rücksetzbar in den KISS-Einstellungen</string>
     <string name="menu_exclude_kiss">von KISS</string>
@@ -217,13 +219,12 @@
     <string name="menu_widget_move_down">Nach unten verschieben</string>
     <string name="gesture_up_name">Aktion für nach oben wischen</string>
     <string name="gesture_down_name">Aktion für nach unten wischen</string>
-    <string name="enable_double_tap_to_lock">Um die Sperre durch zweimaliges Tippen zu aktivieren, wählen Sie KISS Launcher im nachfolgenden Bildschirm und gewähren Sie die zusätzlichen Rechte.</string>
+    <string name="enable_double_tap_to_lock">Zweimaliges Tippen zum Sperren benötigt die Android-Bedienungshilfen. Es werden keine Daten verarbeitet und keine Daten gespeichert. Um diese Funktion zu aktivieren, wählen Sie KISS Launcher im nachfolgenden Bildschirm und gewähren Sie die zusätzlichen Rechte.</string>
     <string name="lock_service_description">Bildschirm in KISS Launcher sperren</string>
     <string name="double_tap_to_lock">Zweimaliges Tippen zum Sperren</string>
     <string name="gestures">Gesten</string>
     <string name="show_subicons">Anwendungssymbole auf Verknüpfungen anzeigen</string>
     <string name="theme_separator">Suchergebnistrennstrich</string>
-    <string name="small_results">Ergebnisse kleiner darstellen</string>
     <string name="gesture_history">Verlauf anzeigen</string>
     <string name="gesture_apps">Anwendungliste anzeigen</string>
     <string name="gesture_notifications">Benachrichtigungen zeigen</string>
@@ -247,10 +248,6 @@
     <string name="theme_customize_default">Thema-Standard</string>
     <string name="theme_shadow">Schriftkontur (Schatten)</string>
     <string name="theme_customisation">Erweiterte Thema-Anpassung</string>
-    <string name="icons_pack_teardrop_name">Tränenförmig</string>
-    <string name="icons_pack_circle_name">Rund</string>
-    <string name="icons_pack_squircle_name">Superelliptisch</string>
-    <string name="icons_pack_square_name">Quadratisch</string>
     <string name="hide_search_bar_hint">Suchleisten-Hinweistext ausblenden</string>
     <string name="theme_wallpaper">Hintergrundbild</string>
     <string name="gesture_right_name">Aktion für nach rechts wischen</string>
@@ -316,4 +313,12 @@
     <string name="excluded_apps_toggle">Zeige ausgeblendete Apps in der Suche</string>
     <string name="gesture_launch_pojo">Starte…</string>
     <string name="always_default_web_search_on_enter">Löse bei der Eingabe immer den Standard-Websuchanbieter aus</string>
+    <string name="results_size">Größe der Ergebnisse</string>
+    <string name="reset_excluded_app_shortcuts_warn">Die Liste der Apps mit in KISS ausgeblendeten Verknüpfungen wirklich zurücksetzen\?</string>
+    <string name="large_result_list_margins">Größere Listenränder</string>
+    <string name="reset_excluded_app_shortcuts_name">Liste der Apps mit in KISS ausgeblendeten Verknüpfungen zurücksetzen</string>
+    <string name="ui_excluded_from_shortcuts_apps">Apps mit in KISS ausgeblendeten Verknüpfungen anzeigen oder bearbeiten</string>
+    <string name="icons_themed_name">Symboldesigns</string>
+    <string name="icons_themed_summary">Symbole werden mit Systemfarben eingefärbt (beta)</string>
+    <string name="search_provider_error_uri_cannot_be_handle">Die angegebene URI kann von keiner Anwendung auf Ihrem Gerät verarbeitet werden.</string>
 </resources>

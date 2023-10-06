@@ -188,7 +188,7 @@
     <string name="pref_show_untagged">Без тегов</string>
     <string name="reset_excluded_from_history_apps_name">Сброс списка скрытых из истории</string>
     <string name="reset_excluded_from_history_apps_warn">Список исключённых из истории приложений будет сброшен. Продолжить\?</string>
-    <string name="settings_excluded_apps">Исключённые приложения</string>
+    <string name="settings_excluded_apps">Исключённые</string>
     <string name="ui_excluded_from_history_apps">Исключённые из истории приложения</string>
     <string name="excluded_app_history_added">Приложение исключено из истории. Восстановление в параметрах KISS</string>
     <string name="menu_exclude_kiss">из KISS</string>
@@ -209,7 +209,7 @@
     <string name="pref_fav_tags_select">Теги для избранного</string>
     <string name="pref_fav_tags_drawable_desc">Отключите для экономии памяти при избытке избранных тегов</string>
     <string name="pref_fav_tags_drawable">Создать значки для тегов избранного</string>
-    <string name="enable_double_tap_to_lock">Для блокировки экрана двойным нажатием необходимы новые разрешения: включите KISS на следующем экране.</string>
+    <string name="enable_double_tap_to_lock">Для блокировки экрана двойным нажатием необходимо предоставить разрешения: включите KISS на следующем экране. Никакие данные не обрабатываются и не сохраняются.</string>
     <string name="gesture_down_name">Действие жеста вниз</string>
     <string name="gesture_up_name">Действие жеста вверх</string>
     <string name="lock_service_description">Блокировка экрана из KISS</string>
@@ -222,7 +222,6 @@
     <string name="menu_size_up">Увеличить</string>
     <string name="menu_size_down">Уменьшить</string>
     <string name="show_subicons">Значок приложения на ярлыках</string>
-    <string name="small_results">Уменьшить высоту строк результатов</string>
     <string name="gesture_history">Показать историю</string>
     <string name="gesture_apps">Показать список приложений</string>
     <string name="gesture_notifications">Показать шторку уведомлений</string>
@@ -248,10 +247,6 @@
     <string name="theme_shadow">Контур текста (тень)</string>
     <string name="theme_customisation">Расширенная настройка темы</string>
     <string name="hide_search_bar_hint">Удалить текст подсказки из панели поиска</string>
-    <string name="icons_pack_teardrop_name">Капля</string>
-    <string name="icons_pack_circle_name">Круг</string>
-    <string name="icons_pack_square_name">Квадрат</string>
-    <string name="icons_pack_squircle_name">Скругленный квадрат</string>
     <string name="theme_wallpaper">Обои</string>
     <string name="gesture_right_name">Действие жеста вправо</string>
     <string name="gesture_left_name">Действие жеста влево</string>
@@ -317,4 +312,13 @@
     <string name="excluded_apps_toggle">Показать в поиске исключённые приложения</string>
     <string name="always_default_web_search_on_enter">Веб-поиск при нажатии Enter</string>
     <string name="results_size">Размер списков на экране</string>
+    <string name="large_result_list_margins">Увеличить границы списка</string>
+    <string name="reset_excluded_app_shortcuts_warn">Сбросить список приложений с исключёнными из показа ярлыками\?</string>
+    <string name="reset_excluded_app_shortcuts_name">Сброс списка исключённых ярлыков</string>
+    <string name="ui_excluded_from_shortcuts_apps">Исключённые из истории ярлыки приложений</string>
+    <string name="color_system">Цвета системы</string>
+    <string name="icons_themed_name">Тема для иконок</string>
+    <string name="icons_themed_summary">Иконки окрашиваются в системные цвета (бета)</string>
+    <string name="search_provider_error_uri_cannot_be_handle">Предоставленный URI не может быть обработан ни одним приложением на вашем устройстве.</string>
+    <string name="menu_shortcut_pin">Закрепить ярлык</string>
 </resources>

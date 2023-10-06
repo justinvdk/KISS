@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import fr.neamar.kiss.broadcast.ProfileChangedHandler;
 import fr.neamar.kiss.dataprovider.AppProvider;
 import fr.neamar.kiss.dataprovider.ContactsProvider;
 import fr.neamar.kiss.dataprovider.IProvider;
@@ -52,7 +53,7 @@ import fr.neamar.kiss.utils.UserHandle;
 
 public class DataHandler extends BroadcastReceiver
         implements SharedPreferences.OnSharedPreferenceChangeListener {
-    final static private String TAG = "DataHandler";
+    final static private String TAG = DataHandler.class.getSimpleName();
 
     /**
      * Package the providers reside in
@@ -64,6 +65,13 @@ public class DataHandler extends BroadcastReceiver
     final static private List<String> PROVIDER_NAMES = Arrays.asList(
             "app", "contacts", "shortcuts"
     );
+
+    /**
+     * Key for a preference that holds a String set of apps which are excluded from showing shortcuts.
+     * Each string in the set is the packageName of an app which may not show shortcuts.
+     */
+    public final static String PREF_KEY_EXCLUDED_SHORTCUT_APPS = "excluded-shortcut-apps";
+
     private TagsHandler tagsHandler;
     final private Context context;
     private String currentQuery;
@@ -88,6 +96,12 @@ public class DataHandler extends BroadcastReceiver
         Intent i = new Intent(MainActivity.START_LOAD);
         this.context.sendBroadcast(i);
 
+        // Monitor changes for profiles
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ProfileChangedHandler profileChangedHandler = new ProfileChangedHandler();
+            profileChangedHandler.register(this.context.getApplicationContext());
+        }
+
         // Monitor changes for service preferences (to automatically start and stop services)
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         prefs.registerOnSharedPreferenceChangeListener(this);
@@ -104,7 +118,7 @@ public class DataHandler extends BroadcastReceiver
 
         // Some basic providers are defined directly,
         // as we don't need the overhead of a service for them
-        // Those providers dong't expose a service connection,
+        // Those providers don't expose a service connection,
         // and you can't bind / unbind to them dynamically.
         ProviderEntry calculatorEntry = new ProviderEntry();
         calculatorEntry.provider = new CalculatorProvider();
@@ -158,7 +172,7 @@ public class DataHandler extends BroadcastReceiver
         try {
             return new Intent(this.context, Class.forName(className.toString()));
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Unable to get intent for provider name: " + name, e);
             return null;
         }
     }
@@ -290,7 +304,6 @@ public class DataHandler extends BroadcastReceiver
      * Called when some event occurred that makes us believe that all data providers
      * might be ready now
      */
-    @SuppressWarnings("CatchAndPrintStackTrace")
     private void handleProviderLoaded() {
         if (this.allProvidersHaveLoaded) {
             return;
@@ -314,7 +327,7 @@ public class DataHandler extends BroadcastReceiver
             Intent i = new Intent(MainActivity.FULL_LOAD_OVER);
             this.context.sendBroadcast(i);
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Unable to send broadcast: " + MainActivity.FULL_LOAD_OVER);
         }
     }
 
@@ -372,10 +385,10 @@ public class DataHandler extends BroadcastReceiver
      * @param itemsToExcludeById Items to exclude from history by their id
      * @return pojos in recent history
      */
-    public ArrayList<Pojo> getHistory(Context context, int itemCount, String historyMode, Set<String> itemsToExcludeById) {
+    public List<Pojo> getHistory(Context context, int itemCount, String historyMode, Set<String> itemsToExcludeById) {
         // Pre-allocate array slots that are likely to be used based on the current maximum item
         // count
-        ArrayList<Pojo> history = new ArrayList<>(Math.min(itemCount, 256));
+        List<Pojo> history = new ArrayList<>(Math.min(itemCount, 256));
 
         // Max sure that we get enough items, regardless of how many may be excluded
         int extendedItemCount = itemCount + itemsToExcludeById.size();
@@ -429,71 +442,6 @@ public class DataHandler extends BroadcastReceiver
         return getPojo(id);
     }
 
-    /**
-     * Update stored shortcut info for all shortcuts of given packageName.
-     *
-     * @param packageName package name
-     */
-    public void updateAllShortcuts(String packageName) {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return;
-        }
-
-        Log.d(TAG, "Updating all shortcuts for " + packageName);
-
-        List<ShortcutInfo> shortcuts;
-        try {
-            shortcuts = ShortcutUtil.getShortcuts(context, packageName);
-        } catch (SecurityException | IllegalStateException e) {
-            Log.e(TAG, "Updating all shortcuts for " + packageName, e);
-            return;
-        }
-
-        updateShortcuts(shortcuts);
-    }
-
-    /**
-     * Update stored shortcut info for all programmatically created shortcuts of given packageName.
-     *
-     * @param packageName package name
-     */
-    public void updateShortcuts(String packageName) {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return;
-        }
-
-        Log.d(TAG, "Updating shortcuts for " + packageName);
-
-        List<ShortcutInfo> shortcuts;
-        try {
-            shortcuts = ShortcutUtil.getShortcuts(context, packageName);
-        } catch (SecurityException | IllegalStateException e) {
-            Log.e(TAG, "Updating shortcuts for " + packageName, e);
-            return;
-        }
-
-        shortcuts = ShortcutUtil.getShortcutsToUpdate(shortcuts);
-        updateShortcuts(shortcuts);
-    }
-
-    /**
-     * Update stored shortcut info for given shortcuts.
-     */
-    public void updateShortcuts(List<ShortcutInfo> shortcuts) {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return;
-        }
-
-        boolean shortcutsUpdated = false;
-        for (ShortcutInfo shortcutInfo : shortcuts) {
-            shortcutsUpdated |= updateShortcut(shortcutInfo);
-        }
-
-        if (shortcutsUpdated && this.getShortcutsProvider() != null) {
-            this.getShortcutsProvider().reload();
-        }
-    }
-
     public void clearHistory() {
         DBHelper.clearHistory(this.context);
     }
@@ -505,65 +453,73 @@ public class DataHandler extends BroadcastReceiver
      * @param shortcut shortcut to be removed
      */
     public void removeShortcut(ShortcutPojo shortcut) {
-        removeShortcut(shortcut.id, shortcut.packageName, shortcut.intentUri);
-        if (this.getShortcutsProvider() != null) {
-            this.getShortcutsProvider().reload();
+        boolean shortcutUpdated = removeShortcut(shortcut.id, shortcut.packageName, shortcut.intentUri);
+        if (shortcutUpdated) {
+            reloadShortcuts();
         }
     }
 
     /**
-     * Update DB with given {@link ShortcutRecord}.
+     * Pin shortcut for given {@link ShortcutPojo}
+     * This is used for pinning dynamic shortcut.
      *
-     * @param shortcutInfo the shortcut to update.
-     * @return true if update was successful
+     * @param shortcut shortcut to be pinned
+     * @return true, if shortcut was pinned
      */
-    public boolean updateShortcut(ShortcutInfo shortcutInfo) {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return false;
+    public boolean pinShortcut(ShortcutPojo shortcut) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (!shortcut.isPinned() && shortcut.isOreoShortcut()) {
+                return ShortcutUtil.pinShortcut(this.context, shortcut.packageName, shortcut.getOreoId());
+            }
         }
-        return updateShortcut(shortcutInfo, !shortcutInfo.isPinned());
+        return false;
+    }
+
+    /**
+     * Unpin shortcut for given {@link ShortcutPojo}
+     * This is used for unpinning shortcut.
+     *
+     * @param shortcut shortcut to be unpinned
+     * @return true, if shortcut was unpinned
+     */
+    public boolean unpinShortcut(ShortcutPojo shortcut) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (shortcut.isPinned() && shortcut.isOreoShortcut()) {
+                if (ShortcutUtil.unpinShortcut(this.context, shortcut.packageName, shortcut.getOreoId())) {
+                    removeShortcut(shortcut.id, shortcut.packageName, shortcut.intentUri);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
      * Update DB with given {@link ShortcutRecord}.
      *
-     * @param shortcutInfo the shortcut to update.
+     * @param shortcutInfo       the shortcut to update.
      * @param includePackageName include package name in shortcut name
      * @return true if update was successful
      */
     public boolean updateShortcut(ShortcutInfo shortcutInfo, boolean includePackageName) {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return false;
         }
 
         // Create Pojo
-        ShortcutRecord shortcut = ShortcutUtil.createShortcutRecord(context, shortcutInfo, includePackageName);
+        ShortcutRecord shortcutRecord = ShortcutUtil.createShortcutRecord(context, shortcutInfo, includePackageName);
 
-        if (shortcut == null) {
+        if (shortcutRecord == null) {
             return false;
         }
+
         if (shortcutInfo.isEnabled()) {
-            String componentName = ShortcutUtil.getComponentName(context, shortcutInfo);
-
-            // if related package is excluded from KISS then the shortcut must be excluded too
-            Set<String> excludedAppList = getExcluded();
-            if (excludedAppList.contains(componentName)) {
-                return false;
-            }
-
-            Log.d(TAG, "Adding shortcut for " + shortcut.packageName);
-
-            // if related package name is excluded from history, shortcut must be excluded from history too
-            Set<String> excludedFromHistoryAppList = getExcludedFromHistory();
-            if (excludedFromHistoryAppList.contains(componentName)) {
-                addToExcludedFromHistory(shortcut);
-            }
-
-            return DBHelper.insertShortcut(this.context, shortcut);
+            Log.d(TAG, "Adding shortcut for " + shortcutRecord.packageName);
+            return DBHelper.insertShortcut(this.context, shortcutRecord);
         } else {
-            String id = ShortcutUtil.generateShortcutId(shortcut.name);
-            removeShortcut(id, shortcut.packageName, shortcut.intentUri);
-            return true;
+            Log.d(TAG, "Removing shortcut for " + shortcutRecord.packageName);
+            String id = ShortcutUtil.generateShortcutId(shortcutRecord);
+            return removeShortcut(id, shortcutRecord.packageName, shortcutRecord.intentUri);
         }
     }
 
@@ -573,12 +529,13 @@ public class DataHandler extends BroadcastReceiver
      * @param id          KISS shortcut id, same as {@link ShortcutPojo#id}
      * @param packageName package name, same as {@link ShortcutPojo#packageName}
      * @param intentUri   intent to be called, same as {@link ShortcutPojo#intentUri}
+     * @return true, if shortcut was removed
      */
-    private void removeShortcut(String id, String packageName, String intentUri) {
+    private boolean removeShortcut(String id, String packageName, String intentUri) {
         Log.d(TAG, "Removing shortcut for " + packageName);
         // Also remove shortcut from favorites
         removeFromFavorites(id);
-        DBHelper.removeShortcut(this.context, packageName, intentUri);
+        return DBHelper.removeShortcut(this.context, packageName, intentUri);
     }
 
     /**
@@ -587,46 +544,48 @@ public class DataHandler extends BroadcastReceiver
      * @param packageName
      */
     public void removeShortcuts(String packageName) {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return;
         }
 
         // Remove all shortcuts from favorites for given package name
         List<ShortcutRecord> shortcutsList = DBHelper.getShortcuts(context, packageName);
-        for (ShortcutRecord shortcut : shortcutsList) {
-            String id = ShortcutUtil.generateShortcutId(shortcut.name);
+        for (ShortcutRecord shortcutRecord : shortcutsList) {
+            String id = ShortcutUtil.generateShortcutId(shortcutRecord);
             removeFromFavorites(id);
         }
 
         DBHelper.removeShortcuts(this.context, packageName);
 
-        if (this.getShortcutsProvider() != null) {
-            this.getShortcutsProvider().reload();
-        }
+        reloadShortcuts();
     }
 
     @NonNull
     public Set<String> getExcludedFromHistory() {
         Set<String> excluded = PreferenceManager.getDefaultSharedPreferences(context).getStringSet("excluded-apps-from-history", null);
-        if (excluded == null) {
-            excluded = new HashSet<>();
-            excluded.add("app://" + AppPojo.getComponentName(context.getPackageName(), MainActivity.class.getName(), new UserHandle()));
+        if (excluded != null) {
+            return new HashSet<>(excluded);
+        } else {
+            Set<String> defaultExcluded = new HashSet<>(1);
+            defaultExcluded.add("app://" + AppPojo.getComponentName(context.getPackageName(), MainActivity.class.getName(), new UserHandle()));
+            return defaultExcluded;
         }
-        return excluded;
     }
 
     @NonNull
     public Set<String> getExcluded() {
         Set<String> excluded = PreferenceManager.getDefaultSharedPreferences(context).getStringSet("excluded-apps", null);
-        if (excluded == null) {
-            excluded = new HashSet<>();
-            excluded.add(AppPojo.getComponentName(context.getPackageName(), MainActivity.class.getName(), new UserHandle()));
+        if (excluded != null) {
+            return new HashSet<>(excluded);
+        } else {
+            Set<String> defaultExcluded = new HashSet<>(1);
+            defaultExcluded.add(AppPojo.getComponentName(context.getPackageName(), MainActivity.class.getName(), new UserHandle()));
+            return defaultExcluded;
         }
-        return excluded;
     }
 
     /**
-     * Get ids that should be excluded from apps
+     * Get ids of favorites that should be excluded from apps/shortcuts
      *
      * @return set of favorite ids
      */
@@ -641,62 +600,32 @@ public class DataHandler extends BroadcastReceiver
         return excludedFavorites;
     }
 
-    public void addToExcludedFromHistory(AppPojo app) {
-        // The set needs to be cloned and then edited,
-        // modifying in place is not supported by putStringSet()
-        Set<String> excluded = new HashSet<>(getExcludedFromHistory());
-        excluded.add(app.id);
-
-        if (ShortcutUtil.areShortcutsEnabled(context)) {
-            // Add all shortcuts for given package name to being excluded from history
-            List<ShortcutRecord> shortcutsList = DBHelper.getShortcuts(context, app.packageName);
-            for (ShortcutRecord shortcut : shortcutsList) {
-                String id = ShortcutUtil.generateShortcutId(shortcut.name);
-                excluded.add(id);
-            }
-            // Refresh shortcuts
-            if (!shortcutsList.isEmpty() && this.getShortcutsProvider() != null) {
-                this.getShortcutsProvider().reload();
-            }
+    @NonNull
+    public Set<String> getExcludedShortcutApps() {
+        Set<String> excluded = PreferenceManager.getDefaultSharedPreferences(context).getStringSet(PREF_KEY_EXCLUDED_SHORTCUT_APPS, null);
+        if (excluded != null) {
+            return new HashSet<>(excluded);
+        } else {
+            return new HashSet<>();
         }
+    }
 
+    public void addToExcludedFromHistory(AppPojo app) {
+        Set<String> excluded = getExcludedFromHistory();
+        excluded.add(app.id);
         PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet("excluded-apps-from-history", excluded).apply();
         app.setExcludedFromHistory(true);
     }
 
-    private void addToExcludedFromHistory(ShortcutRecord shortcut) {
-        // The set needs to be cloned and then edited,
-        // modifying in place is not supported by putStringSet()
-        Set<String> excluded = new HashSet<>(getExcludedFromHistory());
-        // Add given shortcut to being excluded from history
-        String id = ShortcutUtil.generateShortcutId(shortcut.name);
-        excluded.add(id);
-        PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet("excluded-apps-from-history", excluded).apply();
-    }
-
     public void removeFromExcludedFromHistory(AppPojo app) {
-        // The set needs to be cloned and then edited,
-        // modifying in place is not supported by putStringSet()
-        Set<String> excluded = new HashSet<>(getExcludedFromHistory());
+        Set<String> excluded = getExcludedFromHistory();
         excluded.remove(app.id);
-
-        if (ShortcutUtil.areShortcutsEnabled(context)) {
-            // Add all shortcuts for given package name to being included in history
-            List<ShortcutRecord> shortcutsList = DBHelper.getShortcuts(context, app.packageName);
-            for (ShortcutRecord shortcut : shortcutsList) {
-                String id = ShortcutUtil.generateShortcutId(shortcut.name);
-                excluded.remove(id);
-            }
-        }
-
         PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet("excluded-apps-from-history", excluded).apply();
         app.setExcludedFromHistory(false);
     }
 
     public void addToExcluded(AppPojo app) {
-        // The set needs to be cloned and then edited,
-        // modifying in place is not supported by putStringSet()
-        Set<String> excluded = new HashSet<>(getExcluded());
+        Set<String> excluded = getExcluded();
         excluded.add(app.getComponentName());
         PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet("excluded-apps", excluded).apply();
         app.setExcluded(true);
@@ -709,21 +638,30 @@ public class DataHandler extends BroadcastReceiver
         removeShortcuts(app.packageName);
     }
 
+    /**
+     * Add app as an app which is not allowed to show shortcuts
+     */
+    public void addToExcludedShortcutApps(AppPojo app) {
+        Set<String> excluded = getExcludedShortcutApps();
+        excluded.add(app.packageName);
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet(PREF_KEY_EXCLUDED_SHORTCUT_APPS, excluded).apply();
+        app.setExcludedShortcuts(true);
+        reloadShortcuts();
+    }
+
     public void removeFromExcluded(AppPojo app) {
-        // The set needs to be cloned and then edited,
-        // modifying in place is not supported by putStringSet()
-        Set<String> excluded = new HashSet<>(getExcluded());
+        Set<String> excluded = getExcluded();
         excluded.remove(app.getComponentName());
         PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet("excluded-apps", excluded).apply();
         app.setExcluded(false);
 
         // Add shortcuts for this app
-        updateAllShortcuts(app.packageName);
+        reloadShortcuts();
     }
 
     public void removeFromExcluded(String packageName) {
         Set<String> excluded = getExcluded();
-        Set<String> newExcluded = new HashSet<>();
+        Set<String> newExcluded = new HashSet<>(excluded.size());
         for (String excludedItem : excluded) {
             if (!excludedItem.contains(packageName + "/")) {
                 newExcluded.add(excludedItem);
@@ -740,7 +678,7 @@ public class DataHandler extends BroadcastReceiver
         }
 
         Set<String> excluded = getExcluded();
-        Set<String> newExcluded = new HashSet<>();
+        Set<String> newExcluded = new HashSet<>(excluded.size());
         for (String excludedItem : excluded) {
             if (!user.hasStringUserSuffix(excludedItem, '#')) {
                 newExcluded.add(excludedItem);
@@ -748,6 +686,18 @@ public class DataHandler extends BroadcastReceiver
         }
 
         PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet("excluded-apps", newExcluded).apply();
+    }
+
+    /**
+     * Remove app from the apps which are not allowed to show shortcuts -
+     * that is to say, this app may show shortcuts
+     */
+    public void removeFromExcludedShortcutApps(AppPojo app) {
+        Set<String> excluded = getExcludedShortcutApps();
+        excluded.remove(app.packageName);
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet(PREF_KEY_EXCLUDED_SHORTCUT_APPS, excluded).apply();
+        app.setExcludedShortcuts(false);
+        reloadShortcuts();
     }
 
     /**
@@ -772,6 +722,18 @@ public class DataHandler extends BroadcastReceiver
         return appProvider != null ? appProvider.getAllAppsWithoutExcluded() : null;
     }
 
+    /**
+     * Return all pinned shortcuts
+     *
+     * @return pojos for all pinned shortcuts
+     */
+    @Nullable
+    public List<ShortcutPojo> getPinnedShortcuts() {
+        ShortcutsProvider shortcutsProvider = getShortcutsProvider();
+        return shortcutsProvider != null ? shortcutsProvider.getPinnedShortcuts() : null;
+    }
+
+
     @Nullable
     public ContactsProvider getContactsProvider() {
         ProviderEntry entry = this.providers.get("contacts");
@@ -784,10 +746,24 @@ public class DataHandler extends BroadcastReceiver
         return (entry != null) ? ((ShortcutsProvider) entry.provider) : null;
     }
 
+    public void reloadShortcuts() {
+        ShortcutsProvider shortcutsProvider = getShortcutsProvider();
+        if (shortcutsProvider != null) {
+            shortcutsProvider.reload();
+        }
+    }
+
     @Nullable
     public AppProvider getAppProvider() {
         ProviderEntry entry = this.providers.get("app");
         return (entry != null) ? ((AppProvider) entry.provider) : null;
+    }
+
+    public void reloadApps() {
+        AppProvider appProvider = getAppProvider();
+        if (appProvider != null) {
+            appProvider.reload();
+        }
     }
 
     @Nullable
@@ -796,18 +772,25 @@ public class DataHandler extends BroadcastReceiver
         return (entry != null) ? ((SearchProvider) entry.provider) : null;
     }
 
+    public void reloadSearchProvider() {
+        SearchProvider searchProvider = getSearchProvider();
+        if (searchProvider != null) {
+            searchProvider.reload();
+        }
+    }
+
     /**
      * Return most used items.<br />
      * May return null if no items were ever selected (app first use)
      *
      * @return favorites' pojo
      */
-    public ArrayList<Pojo> getFavorites() {
+    public List<Pojo> getFavorites() {
 
         String favApps = PreferenceManager.getDefaultSharedPreferences(this.context).
                 getString("favorite-apps-list", "");
         List<String> favAppsList = Arrays.asList(favApps.split(";"));
-        ArrayList<Pojo> favorites = new ArrayList<>(favAppsList.size());
+        List<Pojo> favorites = new ArrayList<>(favAppsList.size());
         // Find associated items
         for (int i = 0; i < favAppsList.size(); i++) {
             Pojo pojo = getPojo(favAppsList.get(i));
@@ -870,7 +853,7 @@ public class DataHandler extends BroadcastReceiver
         boolean excludedApps = PreferenceManager.getDefaultSharedPreferences(context).
                 getBoolean("exclude-favorites-apps", false);
         if (excludedApps) {
-            getAppProvider().reload();
+            reloadApps();
         }
     }
 
@@ -891,7 +874,7 @@ public class DataHandler extends BroadcastReceiver
         boolean excludedApps = PreferenceManager.getDefaultSharedPreferences(context).
                 getBoolean("exclude-favorites-apps", false);
         if (excludedApps) {
-            getAppProvider().reload();
+            reloadApps();
         }
     }
 
@@ -919,7 +902,7 @@ public class DataHandler extends BroadcastReceiver
         boolean excludedApps = PreferenceManager.getDefaultSharedPreferences(context).
                 getBoolean("exclude-favorites-apps", false);
         if (excludedApps) {
-            getAppProvider().reload();
+            reloadApps();
         }
     }
 

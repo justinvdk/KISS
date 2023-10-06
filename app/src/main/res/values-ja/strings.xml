@@ -210,7 +210,6 @@
     <string name="pref_fav_tags_drawable_desc">多くの fav タグで使用するメモリを減らすにはオフにします</string>
     <string name="pref_fav_tags_drawable">fav タグのアイコンを生成する</string>
     <string name="show_subicons">ショートカットにアプリのアイコンを表示</string>
-    <string name="small_results">結果を小さく表示</string>
     <string name="gesture_apps">アプリ一覧を表示</string>
     <string name="gesture_notifications">通知シェードを表示</string>
     <string name="gesture_keyboard">キーボードを表示</string>
@@ -237,7 +236,7 @@
     <string name="theme_customisation">高度なテーマのカスタマイズ</string>
     <string name="gestures">ジェスチャー</string>
     <string name="double_tap_to_lock">ダブルタップして画面をロック</string>
-    <string name="enable_double_tap_to_lock">ダブルタップでロックを有効にするには、追加の権限を付与する必要があります: 次の画面でKISSを有効にしてください。</string>
+    <string name="enable_double_tap_to_lock">ダブルタップでロックを有効にするには、ユーザー補助サービスが必要です。データの読取や保存は発生しません。この機能を使用するには、次の画面でKISSを有効にしてください。</string>
     <string name="gesture_down_name">下にスワイプ時の動作</string>
     <string name="gesture_up_name">上にスワイプ時の動作</string>
     <string name="lock_service_description">KISS ランチャーから画面ロック</string>
@@ -248,10 +247,6 @@
     <string name="large_favorites_bar">大きめのお気に入りを使用する</string>
     <string name="menu_app_store">ストアで表示</string>
     <string name="hide_search_bar_hint">検索バーからヒントテキストを削除</string>
-    <string name="icons_pack_teardrop_name">涙</string>
-    <string name="icons_pack_circle_name">円形</string>
-    <string name="icons_pack_square_name">四角形</string>
-    <string name="icons_pack_squircle_name">角の丸い四角</string>
     <string name="theme_wallpaper">壁紙</string>
     <string name="gesture_right_name">右にスワイプしたときのアクション</string>
     <string name="gesture_left_name">左にスワイプしたときのアクション</string>
@@ -312,4 +307,11 @@
     <string name="shape_teardrop_bottom_left">ティアドロップ左下</string>
     <string name="shape_hexagon">ヘキサゴン</string>
     <string name="shape_octagon">オクタゴン</string>
+    <string name="color_system">システムカラー</string>
+    <string name="icons_themed_name">テーマアイコン</string>
+    <string name="large_result_list_margins">一覧の余白を大きく</string>
+    <string name="excluded_apps_toggle">除外したアプリを検索結果に表示</string>
+    <string name="reset_excluded_app_shortcuts_name">ショートカットから除外されたアプリの一覧をリセット</string>
+    <string name="reset_excluded_app_shortcuts_warn">ショートカットから除外されたアプリ一覧をリセットしてもよろしいですか\?</string>
+    <string name="ui_excluded_from_shortcuts_apps">ショートカットから除外されたアプリの表示または編集</string>
 </resources>

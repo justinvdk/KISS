@@ -127,7 +127,7 @@
     <string name="menu_tags_edit">മുദ്രകൾ മാറ്റുക</string>
     <string name="menu_favorites_add">ഇഷ്ടപ്പട്ടികയിൽ ചേർക്കുക</string>
     <string name="favorites_erased">ഇഷ്ടപ്പട്ടിക മായിച്ചു.</string>
-    <string name="application_not_found">ന്റെ പൊന്നളിയാ... ആപ്പ് തുറക്കാൻ പറ്റുന്നില്ലാ!</string>
+    <string name="application_not_found">ന്റെ പൊന്നളിയാ… ആപ്പ് തുറക്കാൻ പറ്റുന്നില്ലാ!</string>
     <string name="menu_wallpaper">ചുവർചിത്രം മാറ്റുക…</string>
     <string name="settings_display">പ്രദർശനം</string>
     <string name="settings_sound">ശബ്ദങ്ങളും ഒച്ചയും</string>
@@ -223,7 +223,6 @@
     <string name="app_name">കിസ്സ് ലോഞ്ചർ</string>
     <string name="theme_shadow">വാക്കുകൾക്കു നിഴൽ</string>
     <string name="show_subicons">ആപ്പ് ചിഹ്നം കുറുക്കുവഴിയിൽ കാണിക്കുക</string>
-    <string name="small_results">ഫലങ്ങൾ വലുപ്പം കുറച്ചു കാണിക്കുക</string>
     <string name="gesture_history">മുൻസമ്പർക്കങ്ങൾ കാണിക്കുക</string>
     <string name="gesture_apps">പ്രയോഗങ്ങളുടെ പട്ടിക കാണിക്കുക</string>
     <string name="gesture_notifications">അറിയിപ്പുശാല കാണിക്കുക</string>
@@ -248,10 +247,6 @@
     <string name="theme_customize_default">ഛായ മുൻഗണന</string>
     <string name="theme_customisation">കൂടുതൽ ഛായ മാറ്റങ്ങൾ</string>
     <string name="hide_search_bar_hint">തിരയൽ ബാറിൽ നിന്ന് സൂചന വാചകം നീക്കംചെയ്യുക</string>
-    <string name="icons_pack_teardrop_name">കണ്ണുനീർത്തുള്ളി</string>
-    <string name="icons_pack_circle_name">വൃത്തം</string>
-    <string name="icons_pack_square_name">സമചതുരം</string>
-    <string name="icons_pack_squircle_name">സ്ക്വിർക്ക്ള്‍</string>
     <string name="gesture_right_name">വലതുവശത്തേക്ക് വലിച്ചാൽ ചെയ്യേണ്ടത്</string>
     <string name="gesture_left_name">ഇടതുവശത്തേക്ക് വലിച്ചാൽ ചെയ്യേണ്ടത്</string>
     <string name="theme_wallpaper">വാൾപേപ്പർ</string>
@@ -270,4 +265,20 @@
     <string name="menu_custom_icon">സ്വയം നിർമ്മിത ചിഹ്നങ്ങൾ</string>
     <string name="app_rename_title">സ്വയം നിർമ്മിത പേരുകൾ</string>
     <string name="custom_icon_application_adaptive">അപ്ലിക്കേഷൻ അഡാപ്റ്റീവ്</string>
+    <string name="color_system">സംവിധാനത്തിന്റെ നിറങ്ങൾ</string>
+    <string name="custom_name_set_default">സ്ഥിരമായ പേര്</string>
+    <string name="shape_circle">വൃത്തം</string>
+    <string name="shape_rounded_rectangle">വൃത്താകൃതിയിലുള്ള ദീർഘചതുരം</string>
+    <string name="shape_teardrop_bottom_right">താഴെ-വലത് കണ്ണുനീർ</string>
+    <string name="shape_teardrop_bottom_left">താഴെ-ഇടത് കണ്ണുനീർ</string>
+    <string name="shape_teardrop_top_left">മുകളിൽ-ഇടത് കണ്ണുനീർ</string>
+    <string name="shape_teardrop_top_right">മുകളിൽ-വലത് കണ്ണുനീർ</string>
+    <string name="shape_teardrop_random">ക്രമരഹിതമായ കണ്ണുനീർ</string>
+    <string name="shape_octagon">അഷ്ടഭുജം</string>
+    <string name="shape_square">സമചതുരം</string>
+    <string name="shape_hexagon">ഷഡ്ഭുജം</string>
+    <string name="custom_name_rename">പേരുമാറ്റുക</string>
+    <string name="reset_excluded_app_shortcuts_name">കുറുക്കുവഴികൾ കാണിക്കുന്നതിൽ നിന്ന് ഒഴിവാക്കിയ പ്രയോഗങ്ങളുടെ പട്ടിക പുനഃസജ്ജമാക്കുക</string>
+    <string name="reset_excluded_app_shortcuts_warn">കുറുക്കുവഴികൾ കാണിക്കുന്നതിൽ നിന്ന് ഒഴിവാക്കിയ പ്രയോഗങ്ങളുടെ പട്ടിക പുനഃസജ്ജമാക്കാൻ നിങ്ങൾക്ക് ശരിക്കും താൽപ്പര്യമുണ്ടോ\?</string>
+    <string name="ui_excluded_from_shortcuts_apps">കുറുക്കുവഴികൾ കാണിക്കുന്നതിൽ നിന്ന് ഒഴിവാക്കിയ പ്രയോഗങ്ങൾ കാണുക അല്ലെങ്കിൽ തിരുത്തുക</string>
 </resources>
