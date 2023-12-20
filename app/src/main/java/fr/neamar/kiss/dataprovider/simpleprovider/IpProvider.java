@@ -1,5 +1,7 @@
 package fr.neamar.kiss.dataprovider.simpleprovider;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -24,13 +26,25 @@ public class IpProvider extends SimpleProvider {
                         InetAddress inetAddress = enumIpAddr.nextElement();
                         // Check if the IP address is not a loopback address
                         if (!inetAddress.isLoopbackAddress()) {
+                            String displayName = intf.getDisplayName();
                             SearchPojo pojo = new SearchPojo(
                                     "ip://",
-                                    String.format("%s: %s", intf.getDisplayName(), inetAddress.getHostAddress()),
+                                    String.format("%s: %s", displayName, inetAddress.getHostAddress()),
                                     "",
                                     SearchPojo.Type.IP);
-                            if (s.equals("ip")) {
+                            if (s.startsWith("ip")) {
                                 pojo.relevance = 50;
+                                if (
+                                    s.endsWith("4") && inetAddress.getClass() == Inet4Address.class
+                                    || s.endsWith("6") && inetAddress.getClass() == Inet6Address.class) {
+                                    pojo.relevance += 10;
+                                }
+                                if (displayName.startsWith(("wlan"))) {
+                                    pojo.relevance += 4;
+                                }
+                                if (displayName.startsWith(("tun"))) {
+                                    pojo.relevance += 2;
+                                }
                             } else {
                                 pojo.relevance = 10;
                             }
