@@ -6,19 +6,16 @@
     android:keyHeight="60dp">
     <Row>
         <Key
+            android:codes="48"
+            android:keyLabel="0"
+            android:horizontalGap="37.5%p" />
+        <Key
             android:codes="40"
             android:keyLabel="("
             android:keyWidth="12.5%p" />
-
-        <Key
-            android:codes="48"
-            android:keyLabel="0"
-            android:horizontalGap="25%p" />
-
         <Key
             android:codes="41"
             android:keyLabel=")"
-            android:horizontalGap="12.5%p"
             android:keyWidth="12.5%p" />
     </Row>
 </Keyboard>

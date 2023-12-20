@@ -1,9 +1,7 @@
 package fr.neamar.kiss.utils;
 
-import android.content.Context;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
-import android.text.Editable;
 import android.view.View;
 
 import fr.neamar.kiss.MainActivity;
