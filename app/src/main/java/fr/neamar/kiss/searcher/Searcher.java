@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 import fr.neamar.kiss.KissApplication;
 import fr.neamar.kiss.MainActivity;
 import fr.neamar.kiss.pojo.Pojo;
-import fr.neamar.kiss.pojo.PojoComparator;
+import fr.neamar.kiss.pojo.RelevanceComparator;
 import fr.neamar.kiss.result.Result;
 
 public abstract class Searcher extends AsyncTask<Void, Result<?>, Void> {
@@ -46,27 +46,30 @@ public abstract class Searcher extends AsyncTask<Void, Result<?>, Void> {
     }
 
     PriorityQueue<Pojo> getPojoProcessor(Context context) {
-        return new PriorityQueue<>(DEFAULT_MAX_RESULTS, new PojoComparator());
+        return new PriorityQueue<>(DEFAULT_MAX_RESULTS, new RelevanceComparator());
     }
 
-    int getMaxResultCount() {
+    protected int getMaxResultCount() {
         return DEFAULT_MAX_RESULTS;
     }
 
     /**
-     * This is called from the background thread by the providers
+     * Add single pojo to results.
+     * This is called from the background thread by the providers.
      */
-    public boolean addResult(Pojo... pojos) {
+    public final boolean addResult(Pojo pojos) {
+        return addResults(Collections.singletonList(pojos));
+    }
+
+    /**
+     * Add one or more pojos to results.
+     * This is called from the background thread by the providers.
+     */
+    public boolean addResults(List<? extends Pojo> pojos) {
         if (isCancelled())
             return false;
 
-        MainActivity activity = activityWeakReference.get();
-        if (activity == null)
-            return false;
-
-        Collections.addAll(this.processedPojos, pojos);
-
-        return true;
+        return this.processedPojos.addAll(pojos);
     }
 
     @CallSuper
@@ -78,7 +81,7 @@ public abstract class Searcher extends AsyncTask<Void, Result<?>, Void> {
         displayActivityLoader();
     }
 
-    void displayActivityLoader() {
+    protected void displayActivityLoader() {
         MainActivity activity = activityWeakReference.get();
         if (activity == null)
             return;
@@ -86,14 +89,22 @@ public abstract class Searcher extends AsyncTask<Void, Result<?>, Void> {
         activity.displayLoader(true);
     }
 
+    private void hideActivityLoader(MainActivity activity) {
+        // Loader should still be displayed until all the providers have finished loading
+        activity.displayLoader(!KissApplication.getApplication(activity).getDataHandler().allProvidersHaveLoaded);
+    }
+
     @Override
     protected void onPostExecute(Void param) {
+        if (isCancelled()) {
+            return;
+        }
+
         MainActivity activity = activityWeakReference.get();
         if (activity == null)
             return;
 
-        // Loader should still be displayed until all the providers have finished loading
-        activity.displayLoader(!KissApplication.getApplication(activity).getDataHandler().allProvidersHaveLoaded);
+        hideActivityLoader(activity);
 
         if (this.processedPojos.isEmpty()) {
             activity.adapter.clear();
@@ -118,6 +129,15 @@ public abstract class Searcher extends AsyncTask<Void, Result<?>, Void> {
 
         long time = System.currentTimeMillis() - start;
         Log.v(TAG, "Time to run query `" + query + "` on " + getClass().getSimpleName() + " to completion: " + time + "ms");
+    }
+
+    @Override
+    protected void onCancelled(Void unused) {
+        MainActivity activity = activityWeakReference.get();
+        if (activity == null)
+            return;
+
+        hideActivityLoader(activity);
     }
 
     public void setRefresh(boolean refresh) {

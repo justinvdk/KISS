@@ -115,7 +115,7 @@
 \n
 \nHinweis: wenn die Option „Immer“ nicht angezeigt wird, bitte die Starttaste nach der Auswahl Ihres gewünschten Launchers drücken.</string>
     <string name="share">Teilen mit …</string>
-    <string name="tags_visible">Appschlagworte zeigen</string>
+    <string name="tags_visible">Stichworte zeigen</string>
     <string name="notification_bar_color">Farbe der Benachrichtigungsleiste</string>
     <string name="main_color">Grundfarbe</string>
     <string name="number_of_display_items">Max. Anzahl an Suchergebnissen und Verlaufseinträgen</string>
@@ -227,7 +227,7 @@
     <string name="theme_separator">Suchergebnistrennstrich</string>
     <string name="gesture_history">Verlauf anzeigen</string>
     <string name="gesture_apps">Anwendungliste anzeigen</string>
-    <string name="gesture_notifications">Benachrichtigungen zeigen</string>
+    <string name="gesture_notifications">Benachrichtigungen anzeigen</string>
     <string name="gesture_keyboard">Tastatur anzeigen</string>
     <string name="gesture_do_nothing">Nichts tun</string>
     <string name="history_alphabetically">Alphabetisch</string>
@@ -321,4 +321,22 @@
     <string name="icons_themed_name">Symboldesigns</string>
     <string name="icons_themed_summary">Symbole werden mit Systemfarben eingefärbt (beta)</string>
     <string name="search_provider_error_uri_cannot_be_handle">Die angegebene URI kann von keiner Anwendung auf Ihrem Gerät verarbeitet werden.</string>
+    <string name="export_settings_done">Die Einstellungen wurden erfolgreich in die Zwischenablage exportiert.</string>
+    <string name="export_settings_error">Die Einstellungen können nicht exportiert werden.</string>
+    <string name="import_settings_version_missing">Einstellungen können nicht importiert werden, da keine gültige Version gefunden wurde.</string>
+    <string name="import_settings_upgrade_kiss">Bitte aktualisieren Sie Ihre KISS-Version, bevor Sie diese Einstellungen importieren..</string>
+    <string name="import_settings_save_not_possible">Einstellungen können nicht gespeichert werden.</string>
+    <string name="import_settings_done">Einstellungen erfolgreich importiert!</string>
+    <string name="import_settings_error">Die Einstellungen können nicht importiert werden.</string>
+    <string name="results_size_medium">Mittel</string>
+    <string name="results_size_default">Standard</string>
+    <string name="results_size_smallest">Kleiner</string>
+    <string name="results_size_small">Klein</string>
+    <string name="gesture_menu">Menü anzeigen</string>
+    <string name="gesture_quicksettings">Schnelleinstellungen anzeigen</string>
+    <string name="gesture_hide_keyboard">Tastatur ausblenden</string>
+    <string name="tags_category">Stichworte</string>
+    <string name="tagged_result_sort_mode_name">Sortiermodus für Ergebnisse mit Stichworten</string>
+    <string name="tagged_result_sort_mode_default">Standard, wie Sortiermodus</string>
+    <string name="tagged_result_sort_mode_desc">Wählen Sie aus, wie die Ergebnisse sortiert werden sollen, wenn sie nach Stichworten angezeigt werden</string>
 </resources>

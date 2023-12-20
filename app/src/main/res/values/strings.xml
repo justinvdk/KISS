@@ -134,7 +134,7 @@
     <string name="app_rename_title">Custom name</string>
     <string name="tags_confirmation_added">Tags set</string>
     <string name="app_rename_confirmation">App name is now %s</string>
-    <string name="tags_visible">Show app tags</string>
+    <string name="tags_visible">Show tags</string>
     <string name="excluded_app_list_erased">List of excluded apps erased.</string>
     <string name="excluded_app_list_added">App excluded from KISS. Reset through the KISS settings</string>
     <string name="excluded_app_history_added">App excluded from history. Reset through the KISS settings</string>
@@ -335,4 +335,22 @@
     <string name="always_default_web_search_on_enter">Always trigger default web search provider on enter</string>
     <string name="icons_themed_name">Themed icons</string>
     <string name="icons_themed_summary">Icons are tinted with system colors (beta)</string>
+    <string name="export_settings_done">Settings successfully exported to clipboard.</string>
+    <string name="export_settings_error">Unable to export settings.</string>
+    <string name="import_settings_version_missing">Unable to import settings, no valid version string detected.</string>
+    <string name="import_settings_upgrade_kiss">Please upgrade your KISS version before importing those settings.</string>
+    <string name="import_settings_save_not_possible">Unable to save settings.</string>
+    <string name="import_settings_done">Settings successfully imported!</string>
+    <string name="import_settings_error">Unable to import settings.</string>
+    <string name="results_size_default">Default</string>
+    <string name="results_size_medium">Medium</string>
+    <string name="results_size_small">Small</string>
+    <string name="results_size_smallest">Smallest</string>
+    <string name="gesture_menu">Display menu</string>
+    <string name="gesture_hide_keyboard">Hide keyboard</string>
+    <string name="gesture_quicksettings">Display quick settings</string>
+    <string name="tagged_result_sort_mode_default">Default, like history mode</string>
+    <string name="tagged_result_sort_mode_name">Tagged result sort mode</string>
+    <string name="tagged_result_sort_mode_desc">Select how results should be sorted when shown by tag</string>
+    <string name="tags_category">Tags</string>
 </resources>

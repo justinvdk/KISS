@@ -1,5 +1,7 @@
 package fr.neamar.kiss.preference;
 
+import static android.content.Context.CLIPBOARD_SERVICE;
+
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -21,8 +23,6 @@ import java.util.Set;
 import fr.neamar.kiss.KissApplication;
 import fr.neamar.kiss.R;
 
-import static android.content.Context.CLIPBOARD_SERVICE;
-
 public class ExportSettingsPreference extends Preference {
 
     private static final String TAG = ExportSettingsPreference.class.getSimpleName();
@@ -42,26 +42,46 @@ public class ExportSettingsPreference extends Preference {
         try {
             // Min version required to read those settings
             out.put("__v", 183);
+
+            Set<String> keys = new HashSet<>();
+            keys.addAll(defaultValues.getAll().keySet());
+            keys.addAll(prefs.getAll().keySet());
+
             // Export settings
-            for (Map.Entry<String, ?> entry : defaultValues.getAll().entrySet()) {
-                String key = entry.getKey();
-                if (entry.getValue() instanceof Boolean) {
-                    boolean currentValue = prefs.getBoolean(key, defaultValues.getBoolean(key, true));
-                    if (currentValue != defaultValues.getBoolean(key, true)) {
-                        out.put(key, currentValue);
+            for (String key : keys) {
+                Object value = prefs.getAll().get(key);
+                if (value instanceof Boolean) {
+                    if (defaultValues.contains(key)) {
+                        boolean defaultValue = defaultValues.getBoolean(key, true);
+                        boolean currentValue = prefs.getBoolean(key, defaultValue);
+                        if (currentValue != defaultValue) {
+                            out.put(key, currentValue);
+                        }
+                    } else {
+                        out.put(key, value);
                     }
-                } else if (entry.getValue() instanceof String) {
-                    String currentValue = prefs.getString(key, defaultValues.getString(key, ""));
-                    if (!currentValue.equals(defaultValues.getString(key, ""))) {
-                        out.put(key, currentValue);
+                } else if (value instanceof String) {
+                    if (defaultValues.contains(key)) {
+                        String defaultValue = defaultValues.getString(key, "");
+                        String currentValue = prefs.getString(key, defaultValue);
+                        if (!currentValue.equals(defaultValue)) {
+                            out.put(key, currentValue);
+                        }
+                    } else {
+                        out.put(key, value);
                     }
-                } else if (entry.getValue() instanceof Set) {
-                    Set<String> currentValue = prefs.getStringSet(key, new HashSet<String>());
-                    if (!currentValue.equals(defaultValues.getStringSet(key, new HashSet<String>()))) {
-                        out.put(key, new JSONArray(currentValue));
+                } else if (value instanceof Set) {
+                    if (defaultValues.contains(key)) {
+                        Set<String> defaultValue = defaultValues.getStringSet(key, new HashSet<>());
+                        Set<String> currentValue = prefs.getStringSet(key, new HashSet<>());
+                        if (!currentValue.equals(defaultValue)) {
+                            out.put(key, new JSONArray(currentValue));
+                        }
+                    } else {
+                        out.put(key, new JSONArray((Set<?>) value));
                     }
                 } else {
-                    Log.w(TAG, "Unknown type: " + entry.getKey() + ":" + entry.getValue());
+                    Log.w(TAG, "Unknown type: " + key + ":" + value);
                 }
             }
 
@@ -76,10 +96,10 @@ public class ExportSettingsPreference extends Preference {
             ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("kiss", out.toString());
             clipboard.setPrimaryClip(clip);
-            Toast.makeText(getContext(), "Settings exported to clipboard", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.export_settings_done, Toast.LENGTH_SHORT).show();
         } catch (JSONException e) {
-            Log.e(TAG, "Unable to export preferences", e);
-            Toast.makeText(getContext(), "Unable to export preferences", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Unable to export settings", e);
+            Toast.makeText(getContext(), R.string.export_settings_error, Toast.LENGTH_SHORT).show();
         } finally {
             defaultValues.edit().clear().apply();
         }

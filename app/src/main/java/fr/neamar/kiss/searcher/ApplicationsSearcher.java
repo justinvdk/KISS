@@ -3,7 +3,6 @@ package fr.neamar.kiss.searcher;
 import android.content.Context;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -12,7 +11,7 @@ import fr.neamar.kiss.KissApplication;
 import fr.neamar.kiss.MainActivity;
 import fr.neamar.kiss.pojo.AppPojo;
 import fr.neamar.kiss.pojo.Pojo;
-import fr.neamar.kiss.pojo.PojoComparator;
+import fr.neamar.kiss.pojo.ReversedNameComparator;
 import fr.neamar.kiss.pojo.ShortcutPojo;
 
 /**
@@ -26,7 +25,7 @@ public class ApplicationsSearcher extends Searcher {
     @Override
     PriorityQueue<Pojo> getPojoProcessor(Context context) {
         // Sort from A to Z, so reverse (last item needs to be A, listview starts at the bottom)
-        return new PriorityQueue<>(DEFAULT_MAX_RESULTS, Collections.reverseOrder(new PojoComparator()));
+        return new PriorityQueue<>(DEFAULT_MAX_RESULTS, new ReversedNameComparator());
     }
 
     @Override
@@ -45,13 +44,13 @@ public class ApplicationsSearcher extends Searcher {
         // add apps
         List<AppPojo> pojos = KissApplication.getApplication(activity).getDataHandler().getApplicationsWithoutExcluded();
         if (pojos != null) {
-            this.addResult(getPojosWithoutFavorites(pojos, excludedFavoriteIds).toArray(new Pojo[0]));
+            this.addResults(getPojosWithoutFavorites(pojos, excludedFavoriteIds));
         }
 
         // add pinned shortcuts (PWA, ...)
         List<ShortcutPojo> shortcuts = KissApplication.getApplication(activity).getDataHandler().getPinnedShortcuts();
         if (shortcuts != null) {
-            this.addResult(getPojosWithoutFavorites(shortcuts, excludedFavoriteIds).toArray(new Pojo[0]));
+            this.addResults(getPojosWithoutFavorites(shortcuts, excludedFavoriteIds));
         }
 
         return null;
@@ -60,8 +59,13 @@ public class ApplicationsSearcher extends Searcher {
     @Override
     protected void onPostExecute(Void param) {
         super.onPostExecute(param);
+
+        MainActivity activity = activityWeakReference.get();
+        if (activity == null)
+            return;
+
         // Build sections for fast scrolling
-        activityWeakReference.get().adapter.buildSections();
+        activity.adapter.buildSections();
     }
 
     /**
