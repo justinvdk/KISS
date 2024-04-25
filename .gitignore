@@ -8,6 +8,9 @@
 *.apk
 *.ap_
 
+# Build related files
+*.idsig
+
 # Files for the ART/Dalvik VM
 *.dex
 
