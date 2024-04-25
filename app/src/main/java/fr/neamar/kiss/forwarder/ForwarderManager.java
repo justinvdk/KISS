@@ -43,6 +43,7 @@ public class ForwarderManager extends Forwarder {
     }
 
     public void onStart() {
+        widgetsForwarder.onStart();
     }
 
     public void onResume() {
