@@ -693,23 +693,6 @@ public class SettingsActivity extends PreferenceActivity implements
         if (historyLength > 5) {
             findPreference("reset").setSummary(String.format(getString(R.string.items_title), historyLength));
         }
-
-        // Only display "rate the app" preference if the user has been using KISS long enough to enjoy it ;)
-        Preference rateApp = findPreference("rate-app");
-        if (historyLength < 300) {
-            getPreferenceScreen().removePreference(rateApp);
-        } else {
-            rateApp.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("market://details?id=" + getApplicationContext().getPackageName()));
-                    startActivity(intent);
-
-                    return true;
-                }
-            });
-        }
     }
 
     private void setListPreferenceIconsPacksData(ListPreference lp) {
