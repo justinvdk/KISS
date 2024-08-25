@@ -262,9 +262,7 @@ public class ExperienceTweaks extends Forwarder {
                 }
                 mainActivity.findViewById(R.id.widgetLayout).setVisibility(View.VISIBLE);
             } else {
-                Searcher searcher = new HistorySearcher(mainActivity);
-                searcher.setRefresh(isRefresh);
-                mainActivity.runTask(searcher);
+                mainActivity.runTask(new HistorySearcher(mainActivity, isRefresh));
                 mainActivity.findViewById(R.id.widgetLayout).setVisibility(View.INVISIBLE);
             }
         }
@@ -326,7 +324,7 @@ public class ExperienceTweaks extends Forwarder {
     }
 
     private boolean isMinimalisticModeEnabledForFavorites() {
-        return prefs.getBoolean("history-hide", false) && prefs.getBoolean("favorites-hide", false) && prefs.getBoolean("enable-favorites-bar", true);
+        return isMinimalisticModeEnabled() && prefs.getBoolean("favorites-hide", false) && prefs.getBoolean("enable-favorites-bar", true);
     }
 
     /**

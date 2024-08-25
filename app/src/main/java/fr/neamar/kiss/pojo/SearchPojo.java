@@ -1,25 +1,16 @@
 package fr.neamar.kiss.pojo;
 
 public final class SearchPojo extends Pojo {
-    public enum Type {
-        SEARCH,
-        URL,
-        CALCULATOR,
-        URI,
-        IP
-    }
-
     public String query;
     public final String url;
-    public final Type type;
+    public final SearchPojoType type;
 
-    public SearchPojo(String query, String url, Type type) {
+    public SearchPojo(String query, String url, SearchPojoType type) {
         this(url, query, url, type);
     }
 
-    public SearchPojo(String id, String query, String url, Type type) {
+    public SearchPojo(String id, String query, String url, SearchPojoType type) {
         super(id);
-
         this.query = query;
         this.url = url;
         this.type = type;

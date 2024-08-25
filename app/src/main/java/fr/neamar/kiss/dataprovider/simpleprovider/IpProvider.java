@@ -8,6 +8,7 @@ import java.net.SocketException;
 import java.util.Enumeration;
 
 import fr.neamar.kiss.pojo.SearchPojo;
+import fr.neamar.kiss.pojo.SearchPojoType;
 import fr.neamar.kiss.searcher.Searcher;
 
 public class IpProvider extends SimpleProvider {
@@ -31,7 +32,7 @@ public class IpProvider extends SimpleProvider {
                                     "ip://",
                                     String.format("%s: %s", displayName, inetAddress.getHostAddress()),
                                     "",
-                                    SearchPojo.Type.IP);
+                                    SearchPojoType.IP_QUERY);
                             if (s.startsWith("ip")) {
                                 pojo.relevance = 50;
                                 if (

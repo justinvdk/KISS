@@ -17,6 +17,7 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
 import android.inputmethodservice.KeyboardView;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -202,7 +203,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
             public void onReceive(Context context, Intent intent) {
                 //noinspection ConstantConditions
                 if (intent.getAction().equalsIgnoreCase(LOAD_OVER)) {
-                    updateSearchRecords(true);
+                    updateSearchRecords();
                 } else if (intent.getAction().equalsIgnoreCase(FULL_LOAD_OVER)) {
                     Log.v(TAG, "All providers are done loading.");
 
@@ -426,7 +427,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
 
         // We need to update the history in case an external event created new items
         // (for instance, installed a new app, got a phone call or simply clicked on a favorite)
-        updateSearchRecords(true);
+        updateSearchRecords();
         displayClearOnInput();
 
         if (isViewingAllApps()) {
@@ -470,7 +471,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         // https://github.com/Neamar/KISS/issues/569
         if (!TextUtils.isEmpty(searchEditText.getText())) {
             Log.i(TAG, "Clearing search field");
-            searchEditText.setText("");
+            clearSearchText();
         }
 
         // Hide kissbar when coming back to kiss
@@ -484,6 +485,11 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         closeContextMenu();
     }
 
+    public void clearSearchText() {
+        searchEditText.setText("");
+        searchEditText.setCursorVisible(false);
+    }
+
     @Override
     public void onBackPressed() {
         if (mPopup != null) {
@@ -495,7 +501,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
             // (this will trigger a new event if the search bar was already empty)
             // (which means pressing back in minimalistic mode with history displayed
             // will hide history again)
-            searchEditText.setText("");
+            clearSearchText();
         }
 
         // Calling super.onBackPressed() will quit the launcher, only do this if KISS is not the user's default home.
@@ -592,7 +598,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
      */
     @SuppressWarnings("UnusedParameters")
     public void onClearButtonClicked(View clearButton) {
-        searchEditText.setText("");
+        clearSearchText();
     }
 
     /**
@@ -605,6 +611,16 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if (v instanceof SearchEditText) {
+                SearchEditText edit = ((SearchEditText) v);
+                Rect outR = new Rect();
+                edit.getGlobalVisibleRect(outR);
+                Boolean isKeyboardOpen = !outR.contains((int)ev.getRawX(), (int)ev.getRawY());
+                edit.setCursorVisible(!isKeyboardOpen);
+            }
+        }
         if (mPopup != null && ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
             dismissPopup();
             return true;
@@ -677,16 +693,15 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
 
         if (display) {
             // Display the app list
-            if (searchEditText.getText().length() != 0) {
-                searchEditText.setText("");
+            if (!TextUtils.isEmpty(searchEditText.getText())) {
+                clearSearchText();
             }
             resetTask();
 
             // Needs to be done after setting the text content to empty
             isDisplayingKissBar = true;
 
-            searchTask = new ApplicationsSearcher(MainActivity.this);
-            searchTask.executeOnExecutor(Searcher.SEARCH_THREAD);
+            runTask(new ApplicationsSearcher(MainActivity.this, false));
 
             // Reveal the bar
             if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -729,7 +744,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
             }
 
             if (clearSearchText) {
-                searchEditText.setText("");
+                clearSearchText();
             }
 
             // Do not display the alphabetical scrollbar (#926)
@@ -740,8 +755,8 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         forwarderManager.onDisplayKissBar(display);
     }
 
-    public void updateSearchRecords(boolean isRefresh) {
-        updateSearchRecords(isRefresh, searchEditText.getText().toString());
+    public void updateSearchRecords() {
+        updateSearchRecords(true, searchEditText.getText().toString());
     }
 
     /**
@@ -755,9 +770,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
     private void updateSearchRecords(boolean isRefresh, String query) {
         if (isRefresh && isViewingAllApps()) {
             // Refreshing while viewing all apps (for instance app installed or uninstalled in the background)
-            Searcher searcher = new ApplicationsSearcher(this);
-            searcher.setRefresh(isRefresh);
-            runTask(searcher);
+            runTask(new ApplicationsSearcher(this, isRefresh));
             return;
         }
 
@@ -769,9 +782,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         if (query.isEmpty()) {
             systemUiVisibilityHelper.resetScroll();
         } else {
-            QuerySearcher querySearcher = new QuerySearcher(this, query);
-            querySearcher.setRefresh(isRefresh);
-            runTask(querySearcher);
+            runTask(new QuerySearcher(this, query, isRefresh));
         }
     }
 
@@ -838,7 +849,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         // We selected an item on the list,
         // now we can cleanup the filter:
         if (!TextUtils.isEmpty(searchEditText.getText())) {
-            searchEditText.setText("");
+            clearSearchText();
             displayClearOnInput();
         } else if (isViewingAllApps()) {
             displayKissBar(false);
@@ -868,7 +879,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
             ((CustomIconDialog) dialog).setOnDismissListener(dlg -> {
                 resultLayout.setVisibility(View.VISIBLE);
                 // force icon reload by searching again; is there any better way?
-                updateSearchRecords(true);
+                updateSearchRecords();
             });
         }
         dialog.show(getFragmentManager(), "dialog");
@@ -921,7 +932,7 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
     }
 
     public void showHistory() {
-        runTask(new HistorySearcher(this));
+        runTask(new HistorySearcher(this, false));
 
         clearButton.setVisibility(View.VISIBLE);
         menuButton.setVisibility(View.INVISIBLE);
