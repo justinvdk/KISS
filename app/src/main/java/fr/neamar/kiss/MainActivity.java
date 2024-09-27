@@ -638,38 +638,19 @@ public class MainActivity extends Activity implements QueryInterface, View.OnTou
         }
     }
 
+    // This function was gutted as per:
+    // https://github.com/Neamar/KISS/issues/2308#issuecomment-2356748076
+    // Testing to see if it fixes my instability issues.
     public void displayLoader(boolean display) {
         if (!display) {
-            // Do not display animation if launcher button is already visible
-            if (launcherButton.getVisibility() != View.VISIBLE) {
-                launcherButton.setVisibility(View.VISIBLE);
+           launcherButton.setVisibility(View.VISIBLE);
 
-                int animationDuration = getResources().getInteger(
-                        android.R.integer.config_longAnimTime);
-
-                // Animate transition from loader to launch button
-                launcherButton.animate()
-                        .alpha(1f)
-                        .setDuration(animationDuration)
-                        .setListener(null);
-                loaderSpinner.animate()
-                        .alpha(0f)
-                        .setDuration(animationDuration)
-                        .setListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                loaderSpinner.setVisibility(View.GONE);
-                            }
-                        });
-            }
-        } else {
-            launcherButton.animate().cancel();
-            launcherButton.setAlpha(0);
-            launcherButton.setVisibility(View.INVISIBLE);
-
-            loaderSpinner.animate().cancel();
-            loaderSpinner.setAlpha(1);
-            loaderSpinner.setVisibility(View.VISIBLE);
+           launcherButton.animate()
+                   .alpha(1f)
+                   .setDuration(0);
+           loaderSpinner.animate()
+                   .alpha(0f)
+                   .setDuration(0);
         }
     }
 
